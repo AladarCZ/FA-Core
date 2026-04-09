@@ -1,0 +1,245 @@
+[
+	{
+		ingredientPattern: "_BF,CDC,EGE",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "game:armor-legs-plate-steel"
+			},
+			"C": { type: "item", code: "game:metalplate-blackbronze", quantity: 2
+			},
+			"D": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"E": { type: "item", code: "game:metalnailsandstrips-gold", quantity: 2
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"F": { type: "item", code: "game:leather-sturdy-plain", quantity: 4
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich steel plate legs",
+		output: { type: "item", code: "fa-greenwich-legs-steel-none"
+		}
+	},
+	{
+		ingredientPattern: "_BF,CDC,EGE",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "game:armor-legs-plate-steel"
+			},
+			"C": { type: "item", code: "game:metalplate-steel", quantity: 1
+			},
+			"D": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"E": { type: "item", code: "game:metalnailsandstrips-gold", quantity: 2
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"F": { type: "item", code: "game:leather-sturdy-plain", quantity: 4
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich steel plate legs",
+		output: { type: "item", code: "fa-greenwich-legs-steelplain-none"
+		}
+	},
+	{
+		ingredientPattern: "_BF,CDC,EGE",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "game:armor-legs-plate-meteoriciron"
+			},
+			"C": { type: "item", code: "game:metalplate-silver", quantity: 2
+			},
+			"D": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"E": { type: "item", code: "game:metalnailsandstrips-cupronickel", quantity: 2
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"F": { type: "item", code: "game:leather-normal-plain", quantity: 4
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich steel meteoric iron legs",
+		output: { type: "item", code: "fa-greenwich-legs-meteoriciron-none"
+		}
+	},
+	{
+		ingredientPattern: "_BF,CDC,EGE",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "game:armor-legs-plate-iron"
+			},
+			"C": { type: "item", code: "game:metalplate-zinc", quantity: 2
+			},
+			"D": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"E": { type: "item", code: "game:metalnailsandstrips-blackbronze", quantity: 2
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"F": { type: "item", code: "game:leather-normal-plain", quantity: 4
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich iron plate legs",
+		output: { type: "item", code: "fa-greenwich-legs-iron-none"
+		}
+	},
+	{
+		ingredientPattern: "A_A,_E_,_G_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", 
+					code: "game:cloth-*", 
+					name: "color", 
+					allowedVariants: [
+					"plain",
+					"blue",
+					"red",
+					"yellow",
+					"green",
+					"purple",
+					"pink",
+					"orange",
+					"brown",
+					"gray",
+					"black",
+					"white"
+				], quantity: 2
+			},
+			"E": { type: "item", 
+					code: "fa-greenwich-legs-*-none",
+					name: "metal",
+					allowedVariants: [
+					"iron",
+					"meteoriciron",
+					"steel",
+					"steelplain"
+				]
+			},
+			"G": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "Greenwich legs textiling",
+		output: { type: "item", code: "fa-greenwich-legs-{metal}-{color}"
+		}
+	},
+	{
+		ingredientPattern: "AE,BG",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", 
+					code: "game:armor-legs-hide-bear-*",
+					name: "bear",
+					allowedVariants: [
+					"black",
+					"brown",
+					"polar"
+				]
+			},
+			"E": { type: "item", 
+					code: "fa-greenwich-legs-*-none",
+					name: "metal",
+					allowedVariants: [
+					"iron",
+					"meteoriciron",
+					"steel",
+					"steelplain"
+				]
+			},
+			"G": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+			"B": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			}
+		},
+		width: 2,
+		height: 2,
+		name: "Greenwich plate bear legs",
+		output: { type: "item", code: "fa-greenwich-legs-{metal}-bear-{bear}"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-legs-steel-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich steel plate armet deplume",
+		output: { type: "item", code: "fa-greenwich-legs-steel-none"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-legs-steelplain-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich steel plate armet deplume",
+		output: { type: "item", code: "fa-greenwich-legs-steelplain-none"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-legs-meteoriciron-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich meteoriciron plate armet deplume",
+		output: { type: "item", code: "fa-greenwich-legs-meteoriciron-none"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-legs-iron-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich meteoriciron plate armet deplume",
+		output: { type: "item", code: "fa-greenwich-legs-iron-none"
+		}
+	}
+]

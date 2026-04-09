@@ -1,0 +1,20 @@
+[
+	{
+		"file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-body",
+		"op": "replace",
+		"path": "/shapeByType",
+		"value": {
+		"*bear*": { "base": "entity/armor/greenwich_co/greenwichbearbody_co" },
+		"*": { "base": "entity/armor/greenwich_co/greenwichbody_co" }
+				}
+	},
+	{
+		"file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+		"op": "replace",
+		"path": "/shapeByType",
+		"value": {
+		"fa-greenwich-legs-*bear*": { "base": "entity/armor/greenwich_co/greenwichbearlegs_co" },
+		"fa-greenwich-legs-*": { "base": "entity/armor/greenwich_co/greenwichlegs_co" }
+				}
+	}
+]

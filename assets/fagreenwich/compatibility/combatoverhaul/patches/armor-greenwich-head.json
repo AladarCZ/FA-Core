@@ -1,0 +1,123 @@
+[
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-head",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "value": [
+      {
+        "name": "CombatOverhaul:Armor",
+        "propertiesByType": {
+          "fa-greenwich-head-armet-steel*-*bear*": {
+            "Layers": ["Outer"],
+            "Zones": ["Head", "Neck", "Face"],
+            "Resists": {
+              "PiercingAttack": 10,
+              "SlashingAttack": 8,
+              "BluntAttack": 8
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": -0.02,
+              "manipulationSpeed": -0.08,
+              "steadyAim": -0.12,
+              "healingeffectivness": -0.09,
+              "hungerrate": 0.15
+            }
+          },
+          "fa-greenwich-head-armet*-steel*-*": {
+            "Layers": ["Outer"],
+            "Zones": ["Head", "Neck", "Face"],
+            "Resists": {
+              "PiercingAttack": 10,
+              "SlashingAttack": 8,
+              "BluntAttack": 8
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": 0,
+              "manipulationSpeed": -0.08,
+              "steadyAim": -0.12,
+              "healingeffectivness": -0.09,
+              "hungerrate": 0.15
+            }
+          },
+          "fa-greenwich-head-armet*-*iron-*bear*": {
+            "Layers": ["Outer"],
+            "Zones": ["Head", "Neck", "Face"],
+            "Resists": {
+              "PiercingAttack": 9,
+              "SlashingAttack": 7,
+              "BluntAttack": 7
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": -0.02,
+              "manipulationSpeed": -0.08,
+              "steadyAim": -0.12,
+              "healingeffectivness": -0.09,
+              "hungerrate": 0.15
+            }
+          },
+          "fa-greenwich-head-armet*-*iron-*": {
+            "Layers": ["Outer"],
+            "Zones": ["Head", "Neck", "Face"],
+            "Resists": {
+              "PiercingAttack": 9,
+              "SlashingAttack": 7,
+              "BluntAttack": 7
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": 0,
+              "manipulationSpeed": -0.08,
+              "steadyAim": -0.12,
+              "healingeffectivness": -0.09,
+              "hungerrate": 0.15
+            }
+          }
+        },
+      }
+    ]
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-head",
+    "op": "replace",
+    "path": "/durabilityByType",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "value": {
+        "fa-greenwich-head-armet*-steel*-*": 13000,
+        "fa-greenwich-head-armet*-meteoriciron-*": 7500,
+        "fa-greenwich-head-armet*-iron-*": 6200
+    }
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-head",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "replace",
+    "path": "/attributes/protectionModifiersByType",
+    "value": { "*": null }
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-head",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "replace",
+    "path": "/attributes/statModifiersByType",
+    "value": { "*": null }
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-head",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "replace",
+    "path": "/class",
+    "value": "CombatOverhaul:WearableArmor"
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-head",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "add",
+    "path": "/attributes/materialCountByType",
+    "value": { "*-head-*": 8 }
+  },  
+
+]

@@ -1,0 +1,50 @@
+{
+	"code": "fa-greenwich-rolled-schematic",
+	"maxstacksize": 1,
+	"behaviors": [
+		{ name: "GroundStorable", properties: { layout: 'SingleCenter', collisionBox: { x1: 0, y1: 0, z1: 0, x2: 1, y2: 0.125, z2: 1 } } }
+	],
+	"attributes": {
+		shelvable: true,
+		displaycaseable: true,
+		scrollrackable: true,
+		onscrollrackTransform: {
+			translation: { x: -0.5, y: -0.18, z: 0.48 },
+			rotation: { x: -45, y: 180, z: 0 },
+			origin: { x: 0.5, y: 0.1, z: 0.5 }
+		},
+		groundStorageTransform: {
+			rotation: { x: 0, y: 7, z: 0 },
+			origin: { x: 0.5, y: 0, z: 0.5 }
+		}
+	},	
+	"shape": { "base": "item/utility/scrolled-schematic-greenwich" },
+	"textures": {
+			"scroll": { "base": "utility/scrolled-schematic-greenwich" },
+	},
+	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorygreenwich": ["*"] },
+	"guiTransform": {
+			translation: { x: 0, y: 0, z: 0 },
+			rotation: { x: -19, y: -59, z: 20 },
+			origin: { x: 0.48, y: 0.05, z: 0.52 },
+			scale: 2.4
+	},
+	"fpHandTransform": {
+			translation: { x: 0, y: 0, z: 0 },
+			rotation: { x: 23, y: -5, z: 10 },
+			origin: { x: 0.5, y: 0.1, z: 0.5 },
+			scale: 1.7
+	},
+	"groundTransform": {
+			translation: { x: 0, y: 0, z: 0 },
+			rotation: { x: 1, y: -3, z: 2 },
+			origin: { x: 0.5, y: 0.01, z: 0.5 },
+			scale: 4.03
+	},
+	"tpHandTransform": {
+			translation: { x: -0.75, y: -0.08, z: -0.63 },
+			rotation: { x: -56, y: -8, z: -8 },
+			origin: { x: 0.5, y: 0.1, z: 0.5 },
+			scale: 0.8
+	}
+}

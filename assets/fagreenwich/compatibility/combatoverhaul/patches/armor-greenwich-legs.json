@@ -1,0 +1,123 @@
+[
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "value": [
+      {
+        "name": "CombatOverhaul:Armor",
+        "propertiesByType": {
+          "fa-greenwich-legs-steel*-*bear*": {
+            "Layers": ["Outer"],
+            "Zones": ["Legs", "Feet"],
+            "Resists": {
+              "PiercingAttack": 10,
+              "SlashingAttack": 8,
+              "BluntAttack": 8
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": -0.17,
+              "manipulationSpeed": 0,
+              "steadyAim": 0,
+              "healingeffectivness": -0.06,
+              "hungerrate": 0.08
+            }
+          },
+          "fa-greenwich-legs-steel*-*": {
+            "Layers": ["Outer"],
+            "Zones": ["Legs", "Feet"],
+            "Resists": {
+              "PiercingAttack": 10,
+              "SlashingAttack": 8,
+              "BluntAttack": 8
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": -0.17,
+              "manipulationSpeed": 0,
+              "steadyAim": 0,
+              "healingeffectivness": -0.06,
+              "hungerrate": 0.08
+            }
+          },
+          "fa-greenwich-legs-*iron-*bear*": {
+            "Layers": ["Outer"],
+            "Zones": ["Legs", "Feet"],
+            "Resists": {
+              "PiercingAttack": 9,
+              "SlashingAttack": 7,
+              "BluntAttack": 7
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": -0.17,
+              "manipulationSpeed": 0,
+              "steadyAim": 0,
+              "healingeffectivness": -0.06,
+              "hungerrate": 0.08
+            }
+          },
+          "fa-greenwich-legs-*iron-*": {
+            "Layers": ["Outer"],
+            "Zones": ["Legs", "Feet"],
+            "Resists": {
+              "PiercingAttack": 9,
+              "SlashingAttack": 7,
+              "BluntAttack": 7
+            },
+            "FlatReduction": {},
+            "PlayerStats": {
+              "walkspeed": -0.15,
+              "manipulationSpeed": 0,
+              "steadyAim": 0,
+              "healingeffectivness": -0.06,
+              "hungerrate": 0.08
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+    "op": "replace",
+    "path": "/durabilityByType",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "value": {
+        "fa-greenwich-legs-steel*-*": 25000,
+        "fa-greenwich-legs-meteoriciron-*": 13000,
+        "fa-greenwich-legs-iron-*": 10500
+    }
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "replace",
+    "path": "/attributes/protectionModifiersByType",
+    "value": { "*": null }
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "replace",
+    "path": "/attributes/statModifiersByType",
+    "value": { "*": null }
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "replace",
+    "path": "/class",
+    "value": "CombatOverhaul:WearableArmor"
+  },
+  {
+    "file": "fagreenwich:itemtypes/wearable/greenwich/fa-greenwich-legs",
+    "dependsOn": [{ "modId": "combatoverhaul" }],
+    "op": "add",
+    "path": "/attributes/materialCountByType",
+    "value": { "*-legs-*": 8 }
+  },  
+
+]

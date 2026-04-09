@@ -1,0 +1,245 @@
+[
+	{
+		ingredientPattern: "_B_,DEF,G_I",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"D": { type: "item", code: "game:metalplate-blackbronze", quantity: 6
+			},
+			"E": { type: "item", code: "game:armor-body-plate-steel"
+			},
+			"F": { type: "item", code: "game:metalnailsandstrips-gold", quantity: 12
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"I": { type: "item", code: "game:leather-sturdy-plain", quantity: 12
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich steel plate body",
+		output: { type: "item", code: "fa-greenwich-body-steel-none"
+		}
+	},
+	{
+		ingredientPattern: "_B_,DEF,G_I",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"D": { type: "item", code: "game:metalplate-steel", quantity: 4
+			},
+			"E": { type: "item", code: "game:armor-body-plate-steel"
+			},
+			"F": { type: "item", code: "game:metalnailsandstrips-gold", quantity: 12
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"I": { type: "item", code: "game:leather-sturdy-plain", quantity: 12
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich steel plate body",
+		output: { type: "item", code: "fa-greenwich-body-steelplain-none"
+		}
+	},
+	{
+		ingredientPattern: "_B_,DEF,G_I",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"D": { type: "item", code: "game:metalplate-silver", quantity: 6
+			},
+			"E": { type: "item", code: "game:armor-body-plate-meteoriciron"
+			},
+			"F": { type: "item", code: "game:metalnailsandstrips-cupronickel", quantity: 12
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"I": { type: "item", code: "game:leather-normal-plain", quantity: 12
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich meteoric iron plate body",
+		output: { type: "item", code: "fa-greenwich-body-meteoriciron-none"
+		}
+	},
+	{
+		ingredientPattern: "_B_,DEF,G_I",
+		recipeGroup: 1,
+		ingredients: {
+			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+			},
+			"D": { type: "item", code: "game:metalplate-zinc", quantity: 6
+			},
+			"E": { type: "item", code: "game:armor-body-plate-iron"
+			},
+			"F": { type: "item", code: "game:metalnailsandstrips-blackbronze", quantity: 12
+			},
+			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			},
+			"I": { type: "item", code: "game:leather-normal-plain", quantity: 12
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "greenwich iron plate body",
+		output: { type: "item", code: "fa-greenwich-body-iron-none"
+		}
+	},
+	{
+		ingredientPattern: "AGA,_E_,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", 
+					code: "game:cloth-*", 
+					name: "color", 
+					allowedVariants: [
+					"plain",
+					"blue",
+					"red",
+					"yellow",
+					"green",
+					"purple",
+					"pink",
+					"orange",
+					"brown",
+					"gray",
+					"black",
+					"white"
+				], quantity: 2
+			},
+			"E": { type: "item", 
+					code: "fa-greenwich-body-*-none",
+					name: "metal",
+					allowedVariants: [
+					"iron",
+					"meteoriciron",
+					"steel",
+					"steelplain"
+				]
+			},
+			"G": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			}
+		},
+		width: 3,
+		height: 3,
+		name: "Greenwich body textiling",
+		output: { type: "item", code: "fa-greenwich-body-{metal}-{color}"
+		}
+	},
+	{
+		ingredientPattern: "AE,BG",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", 
+					code: "game:armor-body-hide-bear-*",
+					name: "bear",
+					allowedVariants: [
+					"black",
+					"brown",
+					"polar"
+				]
+			},
+			"E": { type: "item", 
+					code: "fa-greenwich-body-*-none",
+					name: "metal",
+					allowedVariants: [
+					"iron",
+					"meteoriciron",
+					"steel",
+					"steelplain"
+				]
+			},
+			"G": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+			"B": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			}
+		},
+		width: 2,
+		height: 2,
+		name: "gothi plate sallet",
+		output: { type: "item", code: "fa-greenwich-body-{metal}-bear-{bear}"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-body-steel-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich steel plate sallet deplume",
+		output: { type: "item", code: "fa-greenwich-body-steel-none"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-body-steelplain-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich steel plate sallet deplume",
+		output: { type: "item", code: "fa-greenwich-body-steelplain-none"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-body-meteoriciron-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich steel plate sallet deplume",
+		output: { type: "item", code: "fa-greenwich-body-meteoriciron-none"
+		}
+	},
+	{
+		ingredientPattern: "BCD,_A_",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-body-iron-*"
+			},
+			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			},
+			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
+			},
+			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			},
+		},
+		width: 3,
+		height: 2,
+		name: "greenwich steel plate sallet deplume",
+		output: { type: "item", code: "fa-greenwich-body-iron-none"
+		}
+	}
+]

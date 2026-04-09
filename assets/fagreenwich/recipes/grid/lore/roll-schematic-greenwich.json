@@ -1,0 +1,28 @@
+[
+	{
+		ingredientPattern: "A",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-schematic"
+			}
+		},
+		width: 1,
+		height: 1,
+		name: "Roll Scroll",
+		output: { type: "item", code: "fa-greenwich-rolled-schematic"
+		}
+	},
+	{
+		ingredientPattern: "A",
+		recipeGroup: 1,
+		ingredients: {
+			"A": { type: "item", code: "fa-greenwich-rolled-schematic"
+			}
+		},
+		width: 1,
+		height: 1,
+		name: "Roll Scroll",
+		output: { type: "item", code: "fa-greenwich-schematic"
+		}
+	},
+]

@@ -1,0 +1,169 @@
+{
+    "code": "head",
+    "maxstacksize": 1,
+    "attributes": {
+        "handbook": {
+            "groupBy": ["*"]
+        },
+        "groundStorageTransform": {
+            "translation": { "x": -2.1, "y": 0.9, "z": 3.9 },
+            "rotation": { "x": -91, "y": 40, "z": -10 },
+            "origin": { "x": 0, "y": 0, "z": 0 },
+            "scale": 2.45
+        }
+    },
+    "behaviors": [
+        { "name": "GroundStorable", "properties": { "layout": "Quadrants", "collisionBox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.3, "z2": 1 } } },
+        {
+            "name": "AttributeRenderingLibrary.GenerateCreativeStacks",
+            "properties": {
+                "variantgroups": [
+                    { "code": "formhead", "states": ["armet"] },
+                    { "code": "basehead", "states": ["iron", "meteoriciron", "steel"] },
+                    { "code": "coverhead", "states": ["none", "blackbronze"] },
+                    { "code": "striphead", "states": ["none", "gold"] },
+                    { "code": "decorationhead", "states": ["none", "wing", "crista", "bear"] },
+                    { "code": "colorhead", "states": ["none", "red", "green", "black", "blue", "brown", "white", "purple", "pink", "orange", "yellow", "gray", "plain"] }
+                ],
+                "creativeinventory": {
+                    "general": ["*"],
+                    "fagreenwich": ["*"]
+                },
+                "skipvariants": [
+                    "formhead-armet::basehead-iron::coverhead-blackbronze::striphead-gold::decorationhead-none::colorhead-none"
+                ]
+            }
+        },
+        {
+            "name": "AttributeRenderingLibrary.Wearable",
+            "properties": {
+                "textures": {
+                    "formhead-armet::decorationhead-bear": {
+                        "seraph": { "base": "game:block/transparent" },
+                        "basehead": { "base": "fagreenwich:armor/entity/greenwich/{basehead}" },
+                        "colorhead": { "base": "game:entity/humanoid/serapharmor/hide/bear/bear-{colorhead}" }
+                    },
+                    "formhead-armet::decorationhead-bear::colorhead-white": {
+                        "seraph": { "base": "game:block/transparent" },
+                        "basehead": { "base": "fagreenwich:armor/entity/greenwich/{basehead}" },
+                        "colorhead": { "base": "game:entity/humanoid/serapharmor/hide/bear/bear-polar" }
+                    },
+                    "*": {
+                        "seraph": { "base": "game:block/transparent" },
+                        "basehead": { "base": "fagreenwich:armor/entity/greenwich/{basehead}" },
+                        "colorhead": { "base": "fagreenwich:block/plume/{colorhead}" }
+                    }
+                },
+                "shape": {
+                    "*": { "base": "fagreenwich:entity/armor/greenwich/{formhead}/{decorationhead}head" }
+                },
+                "storageFlags": {
+                    "*": 128
+                },
+                "shapeIgnoreElements": {
+                    "*": ["hidehat", "Hood", "hoodupperover", "Hair tile upper part", "ponytailhigh", "ponytaillow", "Hair", "hair-uncovered", "hidefacialhair", "sidehigh", "sidelow", "bangs"]
+                },
+                "durability": {
+                    "basehead-iron": 3700,
+                    "basehead-meteoriciron": 4300,
+                    "@basehead-steel": 7000
+                },
+                "visibleDamageEffect": {
+                    "*": true
+                },
+                "warmth": {
+                    "decorationhead-bear::@colorhead-(black|brown)": 1,
+                    "decorationhead-bear::@colorhead-white": 1.5
+                },
+                "clothesCategory": {
+                    "*": "ArmorHead"
+                },
+                "defaultProtLoss": {
+                    "*": {
+                        "perTierRelativeProtectionLoss": [0.03, 0.15],
+                        "perTierFlatDamagereductionLoss": [0.1, 0.2]
+                    }
+                },
+                "protectionModifiers": {
+                    "basehead-steel": {
+                        "relativeProtection": 0.98,
+                        "flatDamagereduction": 3.5,
+                        "highDamageTierResistant": true,
+                        "protectionTier": 4
+                    },
+                    "basehead-meteoriciron": {
+                        "relativeProtection": 0.975,
+                        "flatDamagereduction": 3.2,
+                        "highDamageTierResistant": true,
+                        "protectionTier": 3
+                    },
+                    "basehead-iron": {
+                        "relativeProtection": 0.97,
+                        "flatDamagereduction": 3,
+                        "highDamageTierResistant": true,
+                        "protectionTier": 3
+                    }
+                },
+                "statModifiers": {
+                    "decorationhead-bear": {
+                        "rangedWeaponsAcc": -0.15,
+                        "rangedWeaponsSpeed": -0.25,
+                        "walkSpeed": -0.14,
+                        "healingeffectivness": -0.3334,
+                        "hungerrate": 0.24
+                    },
+                    "*": {
+                        "rangedWeaponsAcc": -0.15,
+                        "rangedWeaponsSpeed": -0.25,
+                        "walkSpeed": -0.12,
+                        "healingeffectivness": -0.3334,
+                        "hungerrate": 0.24
+                    }
+                },
+                "description": {
+                    "*": ["-----------------------------", "<br>",
+                         ["Type: {0}", "{formhead}"], "<br>", 
+                         ["Material: {0}", "{basehead}"], "<br>", 
+                         ["Design: {0}", "{decorationhead}"], "<br>", 
+                         ["Decoration: {0}", "{colorhead}"], "<br>", 
+                         ["Coating: {0}", "{coverhead}"], "<br>", 
+                         ["Trim: {0}", "{striphead}"], "<br>", 
+                         "-----------------------------", "<br>"]
+                },
+                "STFA_attachableToEntity": {
+                    "categoryCode": {
+                        "*": "armorHead"
+                    },
+                    "disableElements": {
+                        "*": ["hidehat", "Hood", "hoodupperover", "Hair tile upper part", "ponytailhigh", "ponytaillow", "Hair", "hair-uncovered", "hidefacialhair", "sidehigh", "sidelow", "bangs"]
+                    }
+                }
+            }
+        }
+    ],
+    "heldTpIdleAnimation": "holdunderarm",
+    "fpHandTransform": {
+        "translation": { "x": 0.4, "y": -1.9, "z": -0.5 },
+        "rotation": { "x": 163, "y": -111, "z": -180 },
+        "origin": { "x": 0.5, "y": 1.7, "z": 0.5 },
+        "scale": 2.15
+    },
+    "tpHandTransform": {
+        "translation": { "x": -0.82, "y": -2.2, "z": -0.5 },
+        "rotation": { "x": 18, "y": 169, "z": 30 },
+        "origin": { "x": 0.5, "y": 1.7, "z": 0.5 },
+        "scale": 0.64
+    },
+    "guiTransform": {
+        "translation": { "x": 0, "y": 0, "z": 0 },
+        "rotation": { "x": -26, "y": -46, "z": -180 },
+        "origin": { "x": 0.6, "y": 1.72, "z": 0.5 },
+        "scale": 2
+    },
+    "groundTransform": {
+        "translation": { "x": 0, "y": 0, "z": 0 },
+        "rotation": { "x": 0, "y": 0, "z": 0 },
+        "origin": { "x": 0.34, "y": 1.71, "z": 0.5 },
+        "scale": 3.1
+    }
+}
