@@ -1,8 +1,8 @@
 {
   "type": "content",
-  "modid": "fagreenwich",
-  "name": "Forgotten Armory Greenwich",
+  "modid": "facore",
+  "name": "FA-Core",
   "authors": ["AladarCZ"],
-  "description": "Mod adding multiple iron and beyond plate armor variations inspired by Greenwich style",
-  "version": "1.4.2"
+  "description": "Core library for all the Forgotten Armory mods from 1.22 forward",
+  "version": "1.0.0"
 }
