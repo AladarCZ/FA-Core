@@ -1,8 +1,8 @@
 {
-	"code": "decorationkit",
+	"code": "ornaments",
 	"maxstacksize": 1,
 	"variantgroups": [
-		{ "code": "color",  "states": ["red","rose","green","pine","black","blue","navy","brown","white","purple","burghundy","pink","orange","yellow","gray","plain","none"]}
+		{ "code": "type",  "states": ["crista","wings","plume"]}
 	],
 	"behaviors": [
 		{ "name": "GroundStorable", "properties": { "layout": "SingleCenter", "collisionBox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.125, "z2": 1 } } }
