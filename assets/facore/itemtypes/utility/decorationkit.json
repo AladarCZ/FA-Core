@@ -2,7 +2,16 @@
 	"code": "decorationkit",
 	"maxstacksize": 1,
 	"variantgroups": [
-		{ "code": "color",  "states": ["red","rose","green","pine","black","blue","navy","brown","white","purple","burghundy","pink","orange","yellow","gray","plain","none"]}
+		{ "code": "shade",  "states": ["vanilla", "rich"]},
+		{ "code": "color",  "states": ["red","green","pine","black","blue","brown","white","purple","pink","orange","yellow","gray","plain"]}
+	],	
+	"allowedvariants": [
+		"vanilla-*",
+
+		"rich-red",
+		"rich-blue",
+		"rich-purple",
+		"rich-green"
 	],
 	"behaviors": [
 		{ "name": "GroundStorable", "properties": { "layout": "SingleCenter", "collisionBox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.125, "z2": 1 } } }
@@ -15,11 +24,11 @@
 			"origin": { "x": 0.5, "y": 0, "z": 0.5 }
 		}
 	},	
-	"shape": { "base": "item/utility/scrolled-schematic-greenwich" },
+	"shape": { "base": "item/utility/decorationkits/kit" },
 	"textures": {
-			"scroll": { "base": "utility/scrolled-schematic-greenwich" },
+			"color": { "base": "block/decoration/kits/{color}" }
 	},
-	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorygreenwich": ["*"] },
+	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorycore": ["*"] },
 	"guiTransform": {
 			"translation": { "x": 0, "y": 0, "z": 0 },
 			"rotation": { "x": -19, "y": -59, "z": 20 },

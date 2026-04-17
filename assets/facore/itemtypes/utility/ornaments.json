@@ -3,7 +3,20 @@
 	"maxstacksize": 1,
 	"variantgroups": [
 		{ "code": "magnitude", "states": [ "communis", "metallicus", "regalis"]},
-		{ "code": "type", "states": [ "crista", "transversa", "pennae", "pinna", "pluma", "sertum", "laurea", "corona", "vexillum" ]}
+		{ "code": "style", 	"states": [	"crista", 
+										"transversa", 
+										"pennae", 
+										"pinna", 
+										"pluma", 
+										"sertum", 
+										"vexillum", 
+										"laurea", 
+										"corona", 
+										"cervinus", 
+										"arietinus", 
+										"taurinus"
+							]
+		}
 	],
 	"allowedvariants": [
 		"communis-crista",
@@ -12,8 +25,23 @@
 		"communis-pinna",
 		"communis-pluma",
 		"communis-sertum",
-		"communis-crista",
-		
+		"communis-vexillum",
+
+		"regalis-crista",
+		"regalis-transversa",
+		"regalis-pennae",
+		"regalis-pinna",
+		"regalis-pluma",
+		"regalis-sertum",
+		"regalis-vexillum",
+
+		"metallicus-vexillum",
+		"metallicus-laurea",
+		"metallicus-corona",
+		"metallicus-cervinus",
+		"metallicus-arietinus",
+		"metallicus-taurinus"
+
 
 	],
 	"behaviors": [
@@ -27,11 +55,12 @@
 			"origin": { "x": 0.5, "y": 0, "z": 0.5 }
 		}
 	},	
-	"shape": { "base": "item/utility/scrolled-schematic-greenwich" },
+	"shape": { "base": "item/utility/ornaments/{magnitude}{style}" },
 	"textures": {
-			"scroll": { "base": "utility/scrolled-schematic-greenwich" },
+			"metal": { "base": "armor/trim/gold" },
+			"plume": { "base": "block/head/plain" }
 	},
-	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorygreenwich": ["*"] },
+	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorycore": ["*"] },
 	"guiTransform": {
 			"translation": { "x": 0, "y": 0, "z": 0 },
 			"rotation": { "x": -19, "y": -59, "z": 20 },
