@@ -3,7 +3,7 @@
 	"maxstacksize": 1,
 	"variantgroups": [
 		{ "code": "metal", "states": [	"copper",
-										"cupronikel",
+										"cupronickel",
 										"brass",
 										"zinc",
         								"blackbronze",
