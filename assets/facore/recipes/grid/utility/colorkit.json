@@ -1,0 +1,135 @@
+[
+	//Basic Colors
+	{
+		"ingredientPattern": "ABC,_F_,D_E",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:feather", "quantity": 2
+			},
+			"B": { "type": "item", "code": "game:resin", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:fat"
+			},
+			"D": { "type": "item", "code": "game:parchment"
+			},
+			"E": { "type": "item", "code": "game:twine"
+			},			
+			"F": { "type": "item", "code": "game:bowl-color"
+			},
+		},
+		"width": 3,
+		"height": 3,
+		"name": "colorkit basic",
+		"output": { "type": "item", "code": "colorkit-{basiccolor}"
+		}
+	},
+
+	//Rich Colors
+	//Burgundy
+	{
+		"ingredientPattern": "ABC,_F_,DGE",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:feather", "quantity": 2
+			},
+			"B": { "type": "item", "code": "game:resin", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:fat"
+			},
+			"D": { "type": "item", "code": "game:parchment"
+			},
+			"E": { "type": "item", "code": "game:twine"
+			},			
+			"F": { "type": "item", "code": "game:bowl-color-pink"
+			},			
+			"G": { "type": "item", "code": "game:ash"
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "colorkit rich pink",
+		"output": { "type": "item", "code": "colorkit-burgundy"
+		}
+	},
+
+	//Rose
+	{
+		"ingredientPattern": "ABC,_F_,DGE",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:feather", "quantity": 2
+			},
+			"B": { "type": "item", "code": "game:resin", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:fat"
+			},
+			"D": { "type": "item", "code": "game:parchment"
+			},
+			"E": { "type": "item", "code": "game:twine"
+			},			
+			"F": { "type": "item", "code": "game:bowl-color-red"
+			},			
+			"G": { "type": "item", "code": "game:ash"
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "colorkit rich red",
+		"output": { "type": "item", "code": "colorkit-rose"
+		}
+	},
+
+	//Pine
+	{
+		"ingredientPattern": "ABC,_F_,DGE",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:feather", "quantity": 2
+			},
+			"B": { "type": "item", "code": "game:resin", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:fat"
+			},
+			"D": { "type": "item", "code": "game:parchment"
+			},
+			"E": { "type": "item", "code": "game:twine"
+			},			
+			"F": { "type": "item", "code": "game:bowl-color-green"
+			},			
+			"G": { "type": "item", "code": "game:ash"
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "colorkit rich green",
+		"output": { "type": "item", "code": "colorkit-pine"
+		}
+	},
+
+	//Navy
+	{
+		"ingredientPattern": "ABC,_F_,DGE",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:feather", "quantity": 2
+			},
+			"B": { "type": "item", "code": "game:resin", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:fat"
+			},
+			"D": { "type": "item", "code": "game:parchment"
+			},
+			"E": { "type": "item", "code": "game:twine"
+			},			
+			"F": { "type": "item", "code": "game:bowl-color-blue"
+			},			
+			"G": { "type": "item", "code": "game:ash"
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "colorkit rich blue",
+		"output": { "type": "item", "code": "colorkit-navy"
+		}
+	}
+]

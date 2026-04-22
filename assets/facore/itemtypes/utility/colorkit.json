@@ -1,5 +1,5 @@
 {
-	"code": "decorationkit",
+	"code": "colorkit",
 	"maxstacksize": 1,
 	"variantgroups": [
 		{ "code": "color",  "states": [ "red", "rose", "green", "pine", "black", "blue", "navy", "brown", "white", "purple", "pink", "burghundy", "orange", "yellow", "gray", "plain"]}
@@ -15,9 +15,9 @@
 			"origin": { "x": 0.5, "y": 0, "z": 0.5 }
 		}
 	},	
-	"shape": { "base": "item/utility/decorationkits/kit" },
+	"shape": { "base": "item/utility/colorkit" },
 	"textures": {
-			"color": { "base": "block/decoration/kits/{color}" }
+			"color": { "base": "block/colors/kits/{color}" }
 	},
 	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorycore": ["*"] },
 	"guiTransform": {
