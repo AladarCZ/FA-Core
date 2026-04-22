@@ -1,245 +1,375 @@
 [
+	//Crista
 	{
-		ingredientPattern: "_B_,DEF,G_I",
-		recipeGroup: 1,
-		ingredients: {
-			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+		"ingredientPattern": "_A_,_A_,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 2
 			},
-			"D": { type: "item", code: "game:metalplate-blackbronze", quantity: 6
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
 			},
-			"E": { type: "item", code: "game:armor-body-plate-steel"
-			},
-			"F": { type: "item", code: "game:metalnailsandstrips-gold", quantity: 12
-			},
-			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
-			},
-			"I": { type: "item", code: "game:leather-sturdy-plain", quantity: 12
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
 			}
 		},
-		width: 3,
-		height: 3,
-		name: "greenwich steel plate body",
-		output: { type: "item", code: "fa-greenwich-body-steel-none"
+		"width": 3,
+		"height": 3,
+		"name": "Communis Crista Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-crista"
 		}
 	},
 	{
-		ingredientPattern: "_B_,DEF,G_I",
-		recipeGroup: 1,
-		ingredients: {
-			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+		"ingredientPattern": "_A_,_A_,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 4
 			},
-			"D": { type: "item", code: "game:metalplate-steel", quantity: 4
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
 			},
-			"E": { type: "item", code: "game:armor-body-plate-steel"
-			},
-			"F": { type: "item", code: "game:metalnailsandstrips-gold", quantity: 12
-			},
-			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
-			},
-			"I": { type: "item", code: "game:leather-sturdy-plain", quantity: 12
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
 			}
 		},
-		width: 3,
-		height: 3,
-		name: "greenwich steel plate body",
-		output: { type: "item", code: "fa-greenwich-body-steelplain-none"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Crista Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-crista"
 		}
 	},
+
+
+	//Transversa
 	{
-		ingredientPattern: "_B_,DEF,G_I",
-		recipeGroup: 1,
-		ingredients: {
-			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+		"ingredientPattern": "_A_,AAA,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain"
 			},
-			"D": { type: "item", code: "game:metalplate-silver", quantity: 6
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
 			},
-			"E": { type: "item", code: "game:armor-body-plate-meteoriciron"
-			},
-			"F": { type: "item", code: "game:metalnailsandstrips-cupronickel", quantity: 12
-			},
-			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
-			},
-			"I": { type: "item", code: "game:leather-normal-plain", quantity: 12
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
 			}
 		},
-		width: 3,
-		height: 3,
-		name: "greenwich meteoric iron plate body",
-		output: { type: "item", code: "fa-greenwich-body-meteoriciron-none"
+		"width": 3,
+		"height": 3,
+		"name": "Communis Transversa Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-transversa"
 		}
 	},
 	{
-		ingredientPattern: "_B_,DEF,G_I",
-		recipeGroup: 1,
-		ingredients: {
-			"B": { type: "item", code: "fa-greenwich-schematic", returnedStack: { "type": "item", "code": "fa-greenwich-schematic" }
+		"ingredientPattern": "_A_,AAA,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 2
 			},
-			"D": { type: "item", code: "game:metalplate-zinc", quantity: 6
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
 			},
-			"E": { type: "item", code: "game:armor-body-plate-iron"
-			},
-			"F": { type: "item", code: "game:metalnailsandstrips-blackbronze", quantity: 12
-			},
-			"G": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
-			},
-			"I": { type: "item", code: "game:leather-normal-plain", quantity: 12
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
 			}
 		},
-		width: 3,
-		height: 3,
-		name: "greenwich iron plate body",
-		output: { type: "item", code: "fa-greenwich-body-iron-none"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Transversa Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-transversa"
 		}
 	},
+
+
+	//Pennae
 	{
-		ingredientPattern: "AGA,_E_,_A_",
-		recipeGroup: 1,
-		ingredients: {
-			"A": { type: "item", 
-					code: "game:cloth-*", 
-					name: "color", 
-					allowedVariants: [
-					"plain",
-					"blue",
-					"red",
-					"yellow",
-					"green",
-					"purple",
-					"pink",
-					"orange",
-					"brown",
-					"gray",
-					"black",
-					"white"
-				], quantity: 2
+		"ingredientPattern": "A_A,ABA,_C_",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain"
 			},
-			"E": { type: "item", 
-					code: "fa-greenwich-body-*-none",
-					name: "metal",
-					allowedVariants: [
-					"iron",
-					"meteoriciron",
-					"steel",
-					"steelplain"
-				]
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
 			},
-			"G": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
 			}
 		},
-		width: 3,
-		height: 3,
-		name: "Greenwich body textiling",
-		output: { type: "item", code: "fa-greenwich-body-{metal}-{color}"
+		"width": 3,
+		"height": 3,
+		"name": "Communis Pennae Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-pennae"
 		}
 	},
 	{
-		ingredientPattern: "AE,BG",
-		recipeGroup: 1,
-		ingredients: {
-			"A": { type: "item", 
-					code: "game:armor-body-hide-bear-*",
-					name: "bear",
-					allowedVariants: [
-					"black",
-					"brown",
-					"polar"
-				]
+		"ingredientPattern": "A_A,ABA,_C_",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 2
 			},
-			"E": { type: "item", 
-					code: "fa-greenwich-body-*-none",
-					name: "metal",
-					allowedVariants: [
-					"iron",
-					"meteoriciron",
-					"steel",
-					"steelplain"
-				]
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
 			},
-			"G": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
-			},
-			"B": { type: "item", code: "game:hammer-*", isTool: true, toolDurabilityCost: 100
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
 			}
 		},
-		width: 2,
-		height: 2,
-		name: "gothi plate sallet",
-		output: { type: "item", code: "fa-greenwich-body-{metal}-bear-{bear}"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Pennae Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-pennae"
+		}
+	},
+
+
+	//Pinna
+	{
+		"ingredientPattern": "___,_A_,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 4
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Communis Pinna Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-pinna"
 		}
 	},
 	{
-		ingredientPattern: "BCD,_A_",
-		recipeGroup: 1,
-		ingredients: {
-			"A": { type: "item", code: "fa-greenwich-body-steel-*"
+		"ingredientPattern": "___,_A_,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 8
 			},
-			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
 			},
-			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
-			},
-			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
-			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
 		},
-		width: 3,
-		height: 2,
-		name: "greenwich steel plate sallet deplume",
-		output: { type: "item", code: "fa-greenwich-body-steel-none"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Pinna Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-pinna"
+		}
+	},
+
+
+	//Pluma
+	{
+		"ingredientPattern": "AAA,_A_,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain"
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Communis Pluma Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-pluma"
 		}
 	},
 	{
-		ingredientPattern: "BCD,_A_",
-		recipeGroup: 1,
-		ingredients: {
-			"A": { type: "item", code: "fa-greenwich-body-steelplain-*"
+		"ingredientPattern": "AAA,_A_,_BC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 2
 			},
-			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
 			},
-			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
-			},
-			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
-			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
 		},
-		width: 3,
-		height: 2,
-		name: "greenwich steel plate sallet deplume",
-		output: { type: "item", code: "fa-greenwich-body-steelplain-none"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Pluma Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-pluma"
+		}
+	},
+
+
+	//Sertum
+	{
+		"ingredientPattern": "_A_,ABA,_AC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain"
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Communis Sertum Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-sertum"
 		}
 	},
 	{
-		ingredientPattern: "BCD,_A_",
-		recipeGroup: 1,
-		ingredients: {
-			"A": { type: "item", code: "fa-greenwich-body-meteoriciron-*"
+		"ingredientPattern": "_A_,ABA,_AC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 2
 			},
-			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
 			},
-			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
-			},
-			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
-			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
 		},
-		width: 3,
-		height: 2,
-		name: "greenwich steel plate sallet deplume",
-		output: { type: "item", code: "fa-greenwich-body-meteoriciron-none"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Sertum Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-sertum"
+		}
+	},
+
+
+	//Vexillum
+	{
+		"ingredientPattern": "_A_,ABA,_AC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain"
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 4
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Communis Vexillum Ornament",
+		"output": { "type": "item", "code": "ornaments-communis-vexillum"
 		}
 	},
 	{
-		ingredientPattern: "BCD,_A_",
-		recipeGroup: 1,
-		ingredients: {
-			"A": { type: "item", code: "fa-greenwich-body-iron-*"
+		"ingredientPattern": "_A_,ABA,_AC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain", "quantity": 2
 			},
-			"B": { type: "item", code: "game:wrench-*", isTool: true, toolDurabilityCost: 100
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 8
 			},
-			"C": { type: "item", code: "game:saw-*", isTool: true, toolDurabilityCost: 100
-			},
-			"D": { type: "item", code: "game:shears-*", isTool: true, toolDurabilityCost: 100
-			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
 		},
-		width: 3,
-		height: 2,
-		name: "greenwich steel plate sallet deplume",
-		output: { type: "item", code: "fa-greenwich-body-iron-none"
+		"width": 3,
+		"height": 3,
+		"name": "Regalis Vexillum Ornament",
+		"output": { "type": "item", "code": "ornaments-regalis-vexillum"
+		}
+	},
+
+	//Mettalicus
+	//Vexillum
+	{
+		"ingredientPattern": "_B_,_B_,BBC",
+		"recipeGroup": 1,
+		"ingredients": {
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": "2"
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Mettalicus Vexillum Ornament",
+		"output": { "type": "item", "code": "ornaments-mettalicus-vexillum"
+		}
+	},
+
+	//Laurea
+	{
+		"ingredientPattern": "BBB,BCB,BBB",
+		"recipeGroup": 1,
+		"ingredients": {
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold"
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Mettalicus Laurea Ornament",
+		"output": { "type": "item", "code": "ornaments-mettalicus-laurea"
+		}
+	},
+
+	//Corona
+	{
+		"ingredientPattern": "_B_,BCB,_B_",
+		"recipeGroup": 1,
+		"ingredients": {
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Mettalicus Corona Ornament",
+		"output": { "type": "item", "code": "ornaments-mettalicus-corona"
+		}
+	},
+
+	
+	//Cervinus
+	{
+		"ingredientPattern": "AAA,BCB,AAA",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:bone"
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Mettalicus Cervinus Ornament",
+		"output": { "type": "item", "code": "ornaments-mettalicus-cervinus"
+		}
+	},
+
+	
+	//Arietinus
+	{
+		"ingredientPattern": "A_A,D_D,BCB",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:bone"
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			},
+			"D": { "type": "item", "code": "game:bone", "quantity": 2
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Mettalicus Arietinus Ornament",
+		"output": { "type": "item", "code": "ornaments-mettalicus-arietinus"
+		}
+	},
+
+	
+	//Taurinus
+	{
+		"ingredientPattern": "A_A,BCB,D_D",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:bone"
+			},
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold", "quantity": 2
+			},
+			"C": { "type": "item", "code": "game:hammer-*", "isTool": true, "toolDurabilityCost": 100
+			},
+			"D": { "type": "item", "code": "game:bone", "quantity": 2
+			}
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Mettalicus Taurinus Ornament",
+		"output": { "type": "item", "code": "ornaments-mettalicus-taurinus"
 		}
 	}
 ]
