@@ -1,48 +1,8 @@
 {
-	"code": "ornaments",
+	"code": "decorationkit",
 	"maxstacksize": 1,
 	"variantgroups": [
-		{ "code": "magnitude", "states": [ "communis", "metallicus", "regalis"]},
-		{ "code": "style", 	"states": [	"crista", 
-										"transversa", 
-										"pennae", 
-										"pinna", 
-										"pluma", 
-										"sertum", 
-										"vexillum", 
-										"laurea", 
-										"corona", 
-										"cervinus", 
-										"arietinus", 
-										"taurinus"
-							]
-		}
-	],
-	"allowedvariants": [
-		"*communis-crista",
-		"*communis-transversa",
-		"*communis-pennae",
-		"*communis-pinna",
-		"*communis-pluma",
-		"*communis-sertum",
-		"*communis-vexillum",
-
-		"*regalis-crista",
-		"*regalis-transversa",
-		"*regalis-pennae",
-		"*regalis-pinna",
-		"*regalis-pluma",
-		"*regalis-sertum",
-		"*regalis-vexillum",
-
-		"*metallicus-vexillum",
-		"*metallicus-laurea",
-		"*metallicus-corona",
-		"*metallicus-cervinus",
-		"*metallicus-arietinus",
-		"*metallicus-taurinus"
-
-
+		{ "code": "color",  "states": [ "red", "rose", "green", "pine", "black", "blue", "navy", "brown", "white", "purple", "pink", "burghundy", "orange", "yellow", "gray", "plain"]}
 	],
 	"behaviors": [
 		{ "name": "GroundStorable", "properties": { "layout": "SingleCenter", "collisionBox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.125, "z2": 1 } } }
@@ -55,10 +15,9 @@
 			"origin": { "x": 0.5, "y": 0, "z": 0.5 }
 		}
 	},	
-	"shape": { "base": "item/utility/ornaments/{magnitude}{style}" },
+	"shape": { "base": "item/utility/decorationkits/kit" },
 	"textures": {
-			"metal": { "base": "armor/trim/gold" },
-			"plume": { "base": "block/head/plain" }
+			"color": { "base": "block/decoration/kits/{color}" }
 	},
 	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorycore": ["*"] },
 	"guiTransform": {
