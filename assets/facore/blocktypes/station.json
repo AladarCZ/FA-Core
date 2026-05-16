@@ -1,0 +1,199 @@
+{
+  "code": "fa-workstation",
+	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorycore": ["*west"] },
+  "variantGroups": [
+    { "code": "purpose", "states": [ "decoration", "cover", "trim" ]},
+    { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
+  ],	
+  "selectionbox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.5,  "z2": 1},
+	"collisionbox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.5,  "z2": 1},
+  "behaviorsByType": {
+    "*": [
+      {
+        "name": "Multiblock",
+        "propertiesByType": {
+          "*-north": {
+            "sizex": 0.3,
+            "sizey": 0.3,
+            "sizez": 1,
+            "cposition": {
+              "x": 0,
+              "y": 0,
+              "z": -1
+            }
+          },
+          "*-east": {
+            "sizex": 1,
+            "sizey": 0.3,
+            "sizez": 0.3,
+            "cposition": {
+              "x": 0,
+              "y": 0,
+              "z": -1
+            }
+          },
+          "*-south": {
+            "sizex": 0.3,
+            "sizey": 0.3,
+            "sizez": 1,
+            "cposition": {
+              "x": 0,
+              "y": 0,
+              "z": -1
+            }
+          },
+          "*-west": {
+            "sizex": 1,
+            "sizey": 0.3,
+            "sizez": 0.3,
+            "cposition": {
+              "x": 0,
+              "y": 0,
+              "z": -1
+            }
+          }
+        }
+      }
+    ]
+  },
+  "collisionBoxByType": {
+    "*-north": {
+      "x1": 0.0,
+      "y1": 0.0,
+      "z1": 0.3,
+      "x2": 0.0,
+      "y2": 0.0,
+      "z2": -0.7 // North-facing selection box
+    },
+    "*-east": {
+      "x1": 1.3,
+      "y1": 0.0,
+      "z1": 0.0,
+      "x2": 0.7,
+      "y2": 1.0,
+      "z2": 1.0 // East-facing selection box
+    },
+    "*-south": {
+      "x1": 0.0,
+      "y1": 0.0,
+      "z1": 1.3,
+      "x2": 1.0,
+      "y2": 1.0,
+      "z2": 0.7 // North-facing selection box
+    },
+    "*-west": {
+      "x1": 0.3,
+      "y1": 0.0,
+      "z1": 0.0,
+      "x2": -0.7,
+      "y2": 1.0,
+      "z2": 1.0 // East-facing selection box
+    }
+  },
+  "selectionBoxByType": {
+    "*-north": {
+      "x1": 0.0,
+      "y1": 0.0,
+      "z1": 0.3,
+      "x2": 1.0,
+      "y2": 1.0,
+      "z2": -0.7 // North-facing selection box
+    },
+    "*-east": {
+      "x1": 1.3,
+      "y1": 0.0,
+      "z1": 0.0,
+      "x2": 0.7,
+      "y2": 1.0,
+      "z2": 1.0 // East-facing selection box
+    },
+    "*-south": {
+      "x1": 0.0,
+      "y1": 0.0,
+      "z1": 1.3,
+      "x2": 1.0,
+      "y2": 1.0,
+      "z2": 0.7 // North-facing selection box
+    },
+    "*-west": {
+      "x1": 0.3,
+      "y1": 0.0,
+      "z1": 0.0,
+      "x2": -0.7,
+      "y2": 1.0,
+      "z2": 1.0 // East-facing selection box
+    }
+  },
+  "maxstacksize": 1,
+  "drawtype": "json",
+  "blockmaterial": "Wood",
+  "replaceable": 600,
+  "resistance": 3,
+  "snowcoverage": true,
+  "sideopaque": {
+    "all": false
+  },
+  "sideao": {
+    "all": true
+  },
+  "emitsideao": {
+    "all": false
+  },
+  "sidesolid": {
+    "all": false
+  },
+  "heldTpIdleAnimation": "holdbothhands",
+  "heldTpUseAnimation": "twohandplaceblock",
+  "sounds": {
+    "walk": "game:player/buildhigh"
+  },
+  "shapebytype": {
+    "*-north": {
+      "base": "block/stations/{purpose}station",
+      "rotateY": 0
+    },
+    "*-east": {
+      "base": "block/stations/{purpose}station",
+      "rotateY": 270
+    },
+    "*-south": {
+      "base": "block/stations/{purpose}station",
+      "rotateY": 180
+    },
+    "*-west": {
+      "base": "block/stations/{purpose}station",
+      "rotateY": 90
+    }
+  },
+	"texturesByType": {
+		"*": { 
+			"station": { "base": "block/stations/{purpose}" }
+				}
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": 0,
+      "y": -2,
+      "z": -1
+    },
+    "rotation": {
+      "x": 132,
+      "y": -5,
+      "z": -73
+    },
+    "scale": 0.48
+  },
+  "guiTransform": {
+    "translation": {
+      "x": 9,
+      "y": 7.5,
+      "z": 0
+    },
+    "rotation": {
+      "x": -29,
+      "y": 147,
+      "z": 0
+    },
+    "scale": 0.4
+  }
+}
