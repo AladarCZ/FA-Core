@@ -1,0 +1,21 @@
+[
+    {
+        "file": "game:config/tradelists/trader-commodities.json", 
+        "op": "addmerge",
+        "path": "/selling/list",
+        "value":[
+            {"code": "game:metalplate-uranium",
+                "type": "item",
+                "stacksize": 3,
+                "stock": {
+                    "avg": 2,
+                    "var": 1
+                },
+                "price": {
+                    "avg": 15,
+                    "var": 5
+                }
+            }
+        ]
+    }
+]

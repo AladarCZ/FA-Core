@@ -2,15 +2,18 @@
 	"code": "rimsandrivets",
 	"maxstacksize": 1,
 	"variantgroups": [
-		{ "code": "metal", "states": [	"copper",
-										"cupronickel",
+		{ "code": "metal", "states": [	"bismuth",
+										"blackbronze",
 										"brass",
-										"zinc",
-        								"blackbronze",
-										"lead",
-        								"silver",
-    									"gold",
-										"electrum"
+										"copper",
+        								"cupronickel",
+										"electrum",
+        								"gold",
+    									"lead",
+										"meteoriciron",
+										"silver",
+										"uranium",
+										"zinc"										
 							]
 		}
 	],

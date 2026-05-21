@@ -1,18 +1,23 @@
 {
-	"game:tabname-forgottenarmorycore": "Forgotten Armory",
+	"game:tabname-forgottenarmorycore": "FA: Core",
+
 	"facore:block-fa-workstation-cover-east": "Metallizing Cauldron",
 	"facore:block-fa-workstation-cover-north": "Metallizing Cauldron",
 	"facore:block-fa-workstation-cover-south": "Metallizing Cauldron",
 	"facore:block-fa-workstation-cover-west": "Metallizing Cauldron",
+
 	"facore:block-fa-workstation-decoration-east": "Decoration Station",
 	"facore:block-fa-workstation-decoration-north": "Decoration Station",
 	"facore:block-fa-workstation-decoration-south": "Decoration Station",
 	"facore:block-fa-workstation-decoration-west": "Decoration Station",
+
 	"facore:block-fa-workstation-trim-east": "Hemming Crane",
 	"facore:block-fa-workstation-trim-north": "Hemming Crane",
 	"facore:block-fa-workstation-trim-south": "Hemming Crane",
 	"facore:block-fa-workstation-trim-west": "Hemming Crane",
+
 	"facore:item-brackets-insignia": "Brackets (insignia)",
+
 	"facore:item-decorationkit-black": "Decoration kit (black)",
 	"facore:item-decorationkit-blue": "Decoration kit (blue)",
 	"facore:item-decorationkit-brown": "Decoration kit (brown)",
@@ -29,10 +34,13 @@
 	"facore:item-decorationkit-rose": "Decoration kit (rose)",
 	"facore:item-decorationkit-white": "Decoration kit (white)",
 	"facore:item-decorationkit-yellow": "Decoration kit (yellow)",
+
 	"facore:item-fasteners-lacinia": "Fasteners (lacinia)",
+
 	"facore:item-ornaments-communis-crista": "Ornaments (Communis crista)",
 	"facore:item-ornaments-communis-pennae": "Ornaments (Communis pennae)",
 	"facore:item-ornaments-communis-pluma": "Ornaments (Communis pluma)",
+
 	"facore:item-rimsandrivets-blackbronze": "Rims and rivets (blackbronze)",
 	"facore:item-rimsandrivets-brass": "Rims and rivets (brass)",
 	"facore:item-rimsandrivets-copper": "Rims and rivets (copper)",
@@ -41,5 +49,199 @@
 	"facore:item-rimsandrivets-gold": "Rims and rivets (gold)",
 	"facore:item-rimsandrivets-lead": "Rims and rivets (lead)",
 	"facore:item-rimsandrivets-silver": "Rims and rivets (silver)",
-	"facore:item-rimsandrivets-zinc": "Rims and rivets (zinc)"
+	"facore:item-rimsandrivets-zinc": "Rims and rivets (zinc)",
+	"facore:item-rimsandrivets-bismuth": "Rims and rivets (bismuth)",
+	"facore:item-rimsandrivets-uranium": "Rims and rivets (uranium)",
+
+
+
+
+
+
+
+
+
+
+	"game:formhead-armet": "Armet",
+
+	"game:basehead-iron": "Iron",
+	"game:basehead-meteoriciron": "Meteoric iron",
+	"game:basehead-steel": "Steel",
+
+	"game:coverhead-none": "None",
+	"game:coverhead-copper": "Copper",
+	"game:coverheadcupronickel": "Cupronickel",
+	"game:coverhead-brass": "Brass",
+	"game:coverhead-zinc": "Zinc",
+	"game:coverhead-blackbronze": "Black bronze",
+	"game:coverhead-lead": "Lead",
+	"game:coverhead-silver": "Silver",
+	"game:coverhead-meteoriciron": "Meteoric iron",
+	"game:coverhead-gold": "Gold",
+	"game:coverhead-uranium": "Uranium",
+	"game:coverhead-bismuth": "Bismuth",
+
+	"game:striphead-none": "None",
+	"game:striphead-copper": "Copper",
+	"game:stripheadcupronickel": "Cupronickel",
+	"game:striphead-brass": "Brass",
+	"game:striphead-zinc": "Zinc",
+	"game:striphead-blackbronze": "Black bronze",
+	"game:striphead-lead": "Lead",
+	"game:striphead-silver": "Silver",
+	"game:striphead-meteoriciron": "Meteoric iron",
+	"game:striphead-gold": "Gold",
+	"game:striphead-electrum": "Electrum",
+	"game:striphead-uranium": "Uranium",
+	"game:striphead-bismuth": "Bismuth",
+
+	"game:decorationhead-none": "None",
+	"game:decorationhead-communis-pennae": "Communis Pennae",
+	"game:decorationhead-communis-pluma": "Communis Pluma",
+	"game:decorationhead-communis-crista": "Communis Crista",
+	"game:decorationhead-bear": "Bear",
+
+	"game:colorhead-none": "None",
+	"game:colorhead-red": "Red",
+	"game:colorhead-rose": "Rose",
+	"game:colorhead-green": "Green",
+	"game:colorhead-pine": "Pine",
+	"game:colorhead-black": "Black",
+	"game:colorhead-blue": "Blue",
+	"game:colorhead-navy": "Navy",
+	"game:colorhead-brown": "Brown",
+	"game:colorhead-white": "White",
+	"game:colorhead-purple": "Purple",
+	"game:colorhead-pink": "Pink",
+	"game:colorhead-burgundy": "Burgundy",
+	"game:colorhead-orange": "Orange",
+	"game:colorhead-yellow": "Yellow",
+	"game:colorhead-gray": "Gray",
+	"game:colorhead-plain": "Plain",
+
+
+
+
+
+
+
+
+
+	"game:formbody-guardbody": "Guard Chestplate",
+
+	"game:basebody-iron": "Iron",
+	"game:basebody-meteoriciron": "Meteoric iron",
+	"game:basebody-steel": "Steel",
+
+	"game:coverbody-none": "None",
+	"game:coverbody-copper": "Copper",
+	"game:coverbodycupronickel": "Cupronickel",
+	"game:coverbody-brass": "Brass",
+	"game:coverbody-zinc": "Zinc",
+	"game:coverbody-blackbronze": "Black bronze",
+	"game:coverbody-lead": "Lead",
+	"game:coverbody-silver": "Silver",
+	"game:coverbody-meteoriciron": "Meteoric iron",
+	"game:coverbody-gold": "Gold",
+	"game:coverbody-uranium": "Uranium",
+	"game:coverbody-bismuth": "Bismuth",
+
+	"game:stripbody-none": "None",
+	"game:stripbody-copper": "Copper",
+	"game:stripbodycupronickel": "Cupronickel",
+	"game:stripbody-brass": "Brass",
+	"game:stripbody-zinc": "Zinc",
+	"game:stripbody-blackbronze": "Black bronze",
+	"game:stripbody-lead": "Lead",
+	"game:stripbody-silver": "Silver",
+	"game:stripbody-meteoriciron": "Meteoric iron",
+	"game:stripbody-gold": "Gold",
+	"game:stripbody-electrum": "Electrum",
+	"game:stripbody-uranium": "Uranium",
+	"game:stripbody-bismuth": "Bismuth",
+
+	"game:decorationbody-none": "None",
+	"game:decorationbody-insignia": "Insignia",
+	"game:decorationbody-bear": "Bear",
+
+	"game:colorbody-none": "None",
+	"game:colorbody-red": "Red",
+	"game:colorbody-rose": "Rose",
+	"game:colorbody-green": "Green",
+	"game:colorbody-pine": "Pine",
+	"game:colorbody-black": "Black",
+	"game:colorbody-blue": "Blue",
+	"game:colorbody-navy": "Navy",
+	"game:colorbody-brown": "Brown",
+	"game:colorbody-white": "White",
+	"game:colorbody-purple": "Purple",
+	"game:colorbody-pink": "Pink",
+	"game:colorbody-burgundy": "Burgundy",
+	"game:colorbody-orange": "Orange",
+	"game:colorbody-yellow": "Yellow",
+	"game:colorbody-gray": "Gray",
+	"game:colorbody-plain": "Plain",
+
+
+
+
+
+
+
+
+
+	"game:formlegs-guardlegs": "Guard Chestplate",
+
+	"game:baselegs-iron": "Iron",
+	"game:baselegs-meteoriciron": "Meteoric iron",
+	"game:baselegs-steel": "Steel",
+
+	"game:coverlegs-none": "None",
+	"game:coverlegs-copper": "Copper",
+	"game:coverlegscupronickel": "Cupronickel",
+	"game:coverlegs-brass": "Brass",
+	"game:coverlegs-zinc": "Zinc",
+	"game:coverlegs-blackbronze": "Black bronze",
+	"game:coverlegs-lead": "Lead",
+	"game:coverlegs-silver": "Silver",
+	"game:coverlegs-meteoriciron": "Meteoric iron",
+	"game:coverlegs-gold": "Gold",
+	"game:coverlegs-uranium": "Uranium",
+	"game:coverlegs-bismuth": "Bismuth",
+
+	"game:striplegs-none": "None",
+	"game:striplegs-copper": "Copper",
+	"game:striplegscupronickel": "Cupronickel",
+	"game:striplegs-brass": "Brass",
+	"game:striplegs-zinc": "Zinc",
+	"game:striplegs-blackbronze": "Black bronze",
+	"game:striplegs-lead": "Lead",
+	"game:striplegs-silver": "Silver",
+	"game:striplegs-meteoriciron": "Meteoric iron",
+	"game:striplegs-gold": "Gold",
+	"game:striplegs-electrum": "Electrum",
+	"game:striplegs-uranium": "Uranium",
+	"game:striplegs-bismuth": "Bismuth",
+
+	"game:decorationlegs-none": "None",
+	"game:decorationlegs-lacinia": "Lacinia",
+	"game:decorationlegs-bear": "Bear",
+
+	"game:colorlegs-none": "None",
+	"game:colorlegs-red": "Red",
+	"game:colorlegs-rose": "Rose",
+	"game:colorlegs-green": "Green",
+	"game:colorlegs-pine": "Pine",
+	"game:colorlegs-black": "Black",
+	"game:colorlegs-blue": "Blue",
+	"game:colorlegs-navy": "Navy",
+	"game:colorlegs-brown": "Brown",
+	"game:colorlegs-white": "White",
+	"game:colorlegs-purple": "Purple",
+	"game:colorlegs-pink": "Pink",
+	"game:colorlegs-burgundy": "Burgundy",
+	"game:colorlegs-orange": "Orange",
+	"game:colorlegs-yellow": "Yellow",
+	"game:colorlegs-gray": "Gray",
+	"game:colorlegs-plain": "Plain"
 }
