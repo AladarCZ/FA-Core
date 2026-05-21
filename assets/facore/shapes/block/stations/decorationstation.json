@@ -9,6 +9,7 @@
 	"textureSizes": {
 	},
 	"textures": {
+		"station": "facore:block/stations/decoration"
 	},
 	"elements": [
 		{

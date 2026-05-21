@@ -167,8 +167,8 @@
   },
 	"texturesByType": {
 		"*": { 
-			"station": { "base": "block/stations/{purpose}" }
-				}
+			"station": { "base": "block/stations/{purpose}" },
+      "liquid": { "base": "armor/entity/trim/none" }
   },
   "tpHandTransform": {
     "translation": {
