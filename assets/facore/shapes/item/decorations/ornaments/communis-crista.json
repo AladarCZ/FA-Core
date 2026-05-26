@@ -10,7 +10,7 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"plume": "block/decoration/head/plume"
+		"plume": "block/decorations/head/red"
 	},
 	"elements": [
 		{

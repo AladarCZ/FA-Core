@@ -1,6 +1,6 @@
 {
 	"editor": {
-		"collapsedPaths": "Root/origin,Root/origin2,Root/root/ASUpperTorso,Root/Base/ArmorBase/Stand,Root/Base/ArmorBase,Root/root,Root/origin5,Root/Base/ArmorBase/Stand5,Root/origin3,Root/Base/ArmorBase/Stand2,Root/Table2/Drawer4,Root/origin4,Root/ArmorBase,Root/Table1,Root/root/ASStandBaseNS",
+		"collapsedPaths": "Root/origin,Root/origin2,Root/root/ASUpperTorso,Root/Base/ArmorBase/Stand,Root/root,Root/origin5,Root/Base/ArmorBase/Stand5,Root/origin3,Root/Base/ArmorBase/Stand2,Root/Table2/Drawer4,Root/origin4,Root/Base,Root/ArmorBase,Root/Table1,Root/root/ASStandBaseNS",
 		"allAngles": false,
 		"entityTextureMode": true
 	},
@@ -9,17 +9,70 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"station": "facore:block/stations/decoration"
 	},
 	"elements": [
 		{
-			"name": "DecorationKit1Element",
-			"from": [ 8.5, 30.5, 15.5 ],
-			"to": [ 15.5, 36.0, 22.5 ],
-			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 8.5, 30.5, 15.5 ],
+			"name": "HelmetDecoElement",
+			"from": [ 27.6, 31.9, 9.0 ],
+			"to": [ 32.6, 36.9, 14.0 ],
+			"uv": [ 19.0, 24.0 ],
+			"rotationOrigin": [ 27.6, 31.9, 9.0 ],
 			"rotationX": -180.0,
+			"rotationY": 0.0,
 			"rotationZ": -180.0,
+			"faces": {
+				"north": { "texture": "#station", "uv": [ 19.0, 29.0, 24.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
+				"east": { "texture": "#station", "uv": [ 24.0, 29.0, 29.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
+				"south": { "texture": "#station", "uv": [ 29.0, 29.0, 34.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,2,2], "enabled": false },
+				"west": { "texture": "#station", "uv": [ 24.0, 29.0, 29.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,2,2], "enabled": false },
+				"up": { "texture": "#station", "uv": [ 19.0, 24.0, 24.0, 29.0 ], "windMode": [-1,-1,-1,-1], "windData": [2,2,2,2], "enabled": false },
+				"down": { "texture": "#station", "uv": [ 24.0, 24.0, 29.0, 29.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false }
+			}
+		},
+		{
+			"name": "BodyDecoElement",
+			"from": [ 29.6, 18.9, 9.5 ],
+			"to": [ 38.6, 29.9, 15.5 ],
+			"uv": [ 19.0, 24.0 ],
+			"rotationOrigin": [ 29.6, 18.9, 9.5 ],
+			"rotationX": -180.0,
+			"rotationY": 0.0,
+			"rotationZ": -180.0,
+			"faces": {
+				"north": { "texture": "#station", "uv": [ 19.0, 29.0, 24.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
+				"east": { "texture": "#station", "uv": [ 24.0, 29.0, 29.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
+				"south": { "texture": "#station", "uv": [ 29.0, 29.0, 34.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,2,2], "enabled": false },
+				"west": { "texture": "#station", "uv": [ 24.0, 29.0, 29.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,2,2], "enabled": false },
+				"up": { "texture": "#station", "uv": [ 19.0, 24.0, 24.0, 29.0 ], "windMode": [-1,-1,-1,-1], "windData": [2,2,2,2], "enabled": false },
+				"down": { "texture": "#station", "uv": [ 24.0, 24.0, 29.0, 29.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false }
+			}
+		},
+		{
+			"name": "LegsDecoElement",
+			"from": [ 28.6, 3.9, 8.5 ],
+			"to": [ 35.6, 19.9, 12.5 ],
+			"uv": [ 19.0, 24.0 ],
+			"rotationOrigin": [ 28.6, 3.9, 8.5 ],
+			"rotationX": -180.0,
+			"rotationY": 0.0,
+			"rotationZ": -180.0,
+			"faces": {
+				"north": { "texture": "#station", "uv": [ 19.0, 29.0, 24.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
+				"east": { "texture": "#station", "uv": [ 24.0, 29.0, 29.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
+				"south": { "texture": "#station", "uv": [ 29.0, 29.0, 34.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,2,2], "enabled": false },
+				"west": { "texture": "#station", "uv": [ 24.0, 29.0, 29.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,2,2], "enabled": false },
+				"up": { "texture": "#station", "uv": [ 19.0, 24.0, 24.0, 29.0 ], "windMode": [-1,-1,-1,-1], "windData": [2,2,2,2], "enabled": false },
+				"down": { "texture": "#station", "uv": [ 24.0, 24.0, 29.0, 29.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false }
+			}
+		},
+		{
+			"name": "DecorationKit1Element",
+			"from": [ 7.5, 30.5, 14.5 ],
+			"to": [ 14.5, 36.0, 21.5 ],
+			"uv": [ 0.0, 0.0 ],
+			"rotationOrigin": [ 7.5, 30.5, 14.5 ],
+			"rotationX": 180.0,
+			"rotationZ": 180.0,
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 0.0, 7.0, 11.5, 12.5 ], "enabled": false },
 				"east": { "texture": "#station", "uv": [ 11.5, 7.0, 18.5, 12.5 ], "windMode": [-1,-1,-1,-1], "enabled": false },
@@ -31,10 +84,10 @@
 		},
 		{
 			"name": "OrnamentsElement",
-			"from": [ 16.5, 30.5, 15.5 ],
-			"to": [ 23.5, 36.0, 22.5 ],
+			"from": [ 15.5, 30.5, 14.5 ],
+			"to": [ 22.5, 36.0, 21.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 16.5, 30.5, 15.5 ],
+			"rotationOrigin": [ 15.5, 30.5, 14.5 ],
 			"rotationX": -180.0,
 			"rotationZ": -180.0,
 			"faces": {
@@ -48,10 +101,10 @@
 		},
 		{
 			"name": "DecorationKit2Element",
-			"from": [ 8.5, 23.5, 15.5 ],
-			"to": [ 15.5, 29.0, 22.5 ],
+			"from": [ 7.5, 23.5, 14.5 ],
+			"to": [ 14.5, 29.0, 21.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 8.5, 23.5, 15.5 ],
+			"rotationOrigin": [ 7.5, 23.5, 14.5 ],
 			"rotationX": -180.0,
 			"rotationZ": -180.0,
 			"faces": {
@@ -65,10 +118,10 @@
 		},
 		{
 			"name": "BracketsElement",
-			"from": [ 16.5, 23.5, 15.5 ],
-			"to": [ 23.5, 29.0, 22.5 ],
+			"from": [ 15.5, 23.5, 14.5 ],
+			"to": [ 22.5, 29.0, 21.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 16.5, 23.5, 15.5 ],
+			"rotationOrigin": [ 15.5, 23.5, 14.5 ],
 			"rotationX": -180.0,
 			"rotationZ": -180.0,
 			"faces": {
@@ -82,10 +135,10 @@
 		},
 		{
 			"name": "DecorationKit3Element",
-			"from": [ 8.5, 16.5, 15.5 ],
-			"to": [ 15.5, 22.0, 22.5 ],
+			"from": [ 7.5, 16.5, 14.5 ],
+			"to": [ 14.5, 22.0, 21.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 8.5, 16.5, 15.5 ],
+			"rotationOrigin": [ 7.5, 16.5, 14.5 ],
 			"rotationX": -180.0,
 			"rotationZ": -180.0,
 			"faces": {
@@ -99,10 +152,10 @@
 		},
 		{
 			"name": "FastenersElement",
-			"from": [ 16.5, 16.5, 15.5 ],
-			"to": [ 23.5, 22.0, 22.5 ],
+			"from": [ 15.5, 16.5, 14.5 ],
+			"to": [ 22.5, 22.0, 21.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 16.5, 16.5, 15.5 ],
+			"rotationOrigin": [ 15.5, 16.5, 14.5 ],
 			"rotationX": -180.0,
 			"rotationZ": -180.0,
 			"faces": {
@@ -117,7 +170,7 @@
 		{
 			"name": "MordantLinenStackElement",
 			"from": [ 12.8, 7.2, 8.0 ],
-			"to": [ 24.4, 12.7, 15.0 ],
+			"to": [ 24.4, 12.7, 16.0 ],
 			"uv": [ 0.0, 0.0 ],
 			"rotationOrigin": [ 12.8, 7.2, 8.0 ],
 			"rotationX": -180.0,

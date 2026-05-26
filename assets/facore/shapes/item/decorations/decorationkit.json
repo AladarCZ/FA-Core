@@ -9,7 +9,7 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"dye": "block/decoration/dye/red",
+		"dye": "block/decorations/dye/red",
 		"jugs": "block/parts/decorationkit"
 	},
 	"elements": [

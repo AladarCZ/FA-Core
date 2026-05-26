@@ -9,7 +9,6 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"station": "facore:block/stations/trim"
 	},
 	"elements": [
 		{
@@ -1512,41 +1511,11 @@
 			}
 		},
 		{
-			"name": "BodyElement",
-			"from": [ 20.2, 29.4, 7.1 ],
-			"to": [ 29.2, 31.4, 10.1 ],
+			"name": "ArmorElement",
+			"from": [ 19.2, 13.4, 5.1 ],
+			"to": [ 29.2, 32.4, 12.1 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 20.2, 29.4, 7.1 ],
-			"faces": {
-				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 13.0 ], "enabled": false },
-				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 13.0 ], "windMode": [-1,-1,-1,-1], "windData": [0,1,1,0], "enabled": false },
-				"south": { "texture": "#station", "uv": [ 1.0, 1.0, 3.0, 14.0 ], "autoUv": false, "windMode": [-1,-1,-1,-1], "windData": [0,0,1,1], "enabled": false },
-				"west": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 13.0 ], "windMode": [-1,-1,-1,-1], "windData": [0,0,1,1], "enabled": false },
-				"up": { "texture": "#station", "uv": [ 0.0, 0.0, 1.0, 1.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
-				"down": { "texture": "#station", "uv": [ 1.0, 0.0, 2.0, 1.0 ], "windMode": [-1,-1,-1,-1], "enabled": false }
-			}
-		},
-		{
-			"name": "LegsElement",
-			"from": [ 22.6, 27.4, 4.1 ],
-			"to": [ 25.6, 29.4, 13.1 ],
-			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 22.6, 27.4, 4.1 ],
-			"faces": {
-				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 13.0 ], "enabled": false },
-				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 13.0 ], "windMode": [-1,-1,-1,-1], "windData": [0,1,1,0], "enabled": false },
-				"south": { "texture": "#station", "uv": [ 1.0, 1.0, 3.0, 14.0 ], "autoUv": false, "windMode": [-1,-1,-1,-1], "windData": [0,0,1,1], "enabled": false },
-				"west": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 13.0 ], "windMode": [-1,-1,-1,-1], "windData": [0,0,1,1], "enabled": false },
-				"up": { "texture": "#station", "uv": [ 0.0, 0.0, 1.0, 1.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
-				"down": { "texture": "#station", "uv": [ 1.0, 0.0, 2.0, 1.0 ], "windMode": [-1,-1,-1,-1], "enabled": false }
-			}
-		},
-		{
-			"name": "HeadElement",
-			"from": [ 21.6, 22.4, 6.1 ],
-			"to": [ 26.6, 27.4, 11.1 ],
-			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 21.6, 22.4, 6.1 ],
+			"rotationOrigin": [ 19.2, 13.4, 5.1 ],
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 13.0 ], "enabled": false },
 				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 13.0 ], "windMode": [-1,-1,-1,-1], "windData": [0,1,1,0], "enabled": false },

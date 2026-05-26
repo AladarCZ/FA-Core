@@ -1,6 +1,6 @@
 {
 	"editor": {
-		"collapsedPaths": ",Root/Base/Firepit3,Root/Base/BaseTop,Root/Table,Root/root/Cauldron/base2,Root/root/Cauldron/base3,Root/root/Cauldron/base4,Root/CauldronOrigin,Root/Base/FuelDoor",
+		"collapsedPaths": ",Root/Base/Firepit3,Root/Base/BaseTop,Root/Table,Root/root/Cauldron/base2,Root/Base/Firepit7,Root/root/Cauldron/base3,Root/root/Cauldron/base4,Root/CauldronOrigin",
 		"allAngles": false,
 		"entityTextureMode": true
 	},
@@ -9,8 +9,6 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"station": "facore:block/stations/trim",
-		"liquid": "facore:armor/entity/trim/none"
 	},
 	"elements": [
 		{
@@ -2260,10 +2258,10 @@
 		},
 		{
 			"name": "LidOpenElement",
-			"from": [ 19.0, 19.0, 6.5 ],
-			"to": [ 29.0, 21.0, 9.5 ],
+			"from": [ 14.5, 7.0, 0.5 ],
+			"to": [ 29.5, 17.0, 15.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 19.0, 19.0, 6.5 ],
+			"rotationOrigin": [ 14.5, 7.0, 0.5 ],
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 2.0 ], "enabled": false },
 				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
@@ -2275,10 +2273,10 @@
 		},
 		{
 			"name": "FuelElement",
-			"from": [ 18.0, 1.0, 1.5 ],
-			"to": [ 30.0, 6.0, 13.5 ],
+			"from": [ 16.0, 1.0, 1.5 ],
+			"to": [ 28.0, 6.0, 13.5 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 18.0, 1.0, 1.5 ],
+			"rotationOrigin": [ 16.0, 1.0, 1.5 ],
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 2.0 ], "enabled": false },
 				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
@@ -2290,10 +2288,10 @@
 		},
 		{
 			"name": "LiquidPourElement",
-			"from": [ 19.0, 16.0, 3.5 ],
-			"to": [ 29.0, 18.0, 12.5 ],
+			"from": [ 16.4, 11.0, 2.4 ],
+			"to": [ 27.7, 18.5, 13.7 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 19.0, 16.0, 3.5 ],
+			"rotationOrigin": [ 16.4, 11.0, 2.4 ],
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 2.0 ], "enabled": false },
 				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
@@ -2309,6 +2307,21 @@
 			"to": [ 14.0, 18.0, 16.0 ],
 			"uv": [ 0.0, 0.0 ],
 			"rotationOrigin": [ 32.0, 17.0, 0.0 ],
+			"faces": {
+				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 2.0 ], "enabled": false },
+				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
+				"south": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
+				"west": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
+				"up": { "texture": "#station", "uv": [ 0.0, 0.0, 1.0, 1.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
+				"down": { "texture": "#station", "uv": [ 1.0, 0.0, 2.0, 1.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false }
+			}
+		},
+		{
+			"name": "FuelDoorElement",
+			"from": [ 16.0, 1.0, -0.3 ],
+			"to": [ 28.0, 5.2, 1.1 ],
+			"uv": [ 0.0, 0.0 ],
+			"rotationOrigin": [ 16.0, 1.0, -0.3 ],
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 0.0, 1.0, 1.0, 2.0 ], "enabled": false },
 				"east": { "texture": "#station", "uv": [ 1.0, 1.0, 2.0, 2.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,1,1,1], "enabled": false },
