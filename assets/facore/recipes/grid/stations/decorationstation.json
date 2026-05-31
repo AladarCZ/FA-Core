@@ -1,0 +1,18 @@
+[
+	{
+		"ingredientPattern": "BCB,DFD,FHF",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:rod-tinbronze" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:rod-iron", "quantity": 2  },
+			"C": { "type": "item", "code": "game:armorstand"  },
+			"D": { "type": "item", "code": "game:leather-normal-plain", "quantity": 3 },
+			"F": { "type": "item", "code": "game:plank-*", "quantity": 8 },	
+			"H": { "type": "item", "code": "game:resin", "quantity": 10 }	
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Decorationstation",
+		"output": { "type": "block", "code": "facore:fa-workstation-decoration-west" }
+	}
+]

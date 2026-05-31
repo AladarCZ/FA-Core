@@ -1,0 +1,17 @@
+[
+	{
+		"ingredientPattern": "_BC,A_A,A_A",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold" },
+			"C": { "type": "item", "code": "game:shears-*", "isTool": true, "toolDurabilityCost": 100 }		
+		},
+		"copyAttributesFrom": "A",
+		"averageDurability": false,
+		"width": 3,
+		"height": 3,
+		"name": "Lacinia Fastener",
+		"output": { "type": "item", "code": "facore:fasteners-lacinia" }
+	}
+]

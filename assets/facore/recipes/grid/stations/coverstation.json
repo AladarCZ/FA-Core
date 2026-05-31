@@ -1,0 +1,17 @@
+[
+	{
+		"ingredientPattern": "B_B,FBH,EEE",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:rod-tinbronze" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:metalplate-iron", "quantity": 2  },
+			"E": { "type": "item", "code": "game:burnedbrick-fire", "quantity": 6 },	
+			"F": { "type": "item", "code": "game:plank-*", "quantity": 8 },	
+			"H": { "type": "item", "code": "game:resin", "quantity": 4 }
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Coverstation",
+		"output": { "type": "block", "code": "facore:fa-workstation-cover-west" }
+	}
+]

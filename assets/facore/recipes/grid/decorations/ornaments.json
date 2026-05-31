@@ -1,0 +1,50 @@
+[
+	{
+		"ingredientPattern": "AAA,_A_,_BC",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold" },
+			"C": { "type": "item", "code": "game:shears-*", "isTool": true, "toolDurabilityCost": 100 }		
+		},
+		"copyAttributesFrom": "A",
+		"averageDurability": false,
+		"width": 3,
+		"height": 3,
+		"name": "Pluma Communis Ornament",
+		"output": { "type": "item", "code": "facore:ornaments-communis-pluma" }
+	},
+
+	{
+		"ingredientPattern": "A_A,A_A,_BC",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold" },
+			"C": { "type": "item", "code": "game:shears-*", "isTool": true, "toolDurabilityCost": 100 }		
+		},
+		"copyAttributesFrom": "A",
+		"averageDurability": false,
+		"width": 3,
+		"height": 3,
+		"name": "Pennae Communis Ornament",
+		"output": { "type": "item", "code": "facore:ornaments-communis-pennae" }
+	},
+
+	{
+		"ingredientPattern": "_A_,_A_,_BC",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain" , "quantity": 4 },
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold" },
+			"C": { "type": "item", "code": "game:shears-*", "isTool": true, "toolDurabilityCost": 100 }		
+		},
+		"copyAttributesFrom": "A",
+		"averageDurability": false,
+		"width": 3,
+		"height": 3,
+		"name": "Crista Communis Ornament",
+		"output": { "type": "item", "code": "facore:ornaments-communis-crista" }
+	}
+
+]

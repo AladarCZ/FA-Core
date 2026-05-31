@@ -1,0 +1,17 @@
+[
+	{
+		"ingredientPattern": "AAA,ABA,ACA",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain" , "quantity": 1 },
+			"B": { "type": "item", "code": "game:metalnailsandstrips-gold" },
+			"C": { "type": "item", "code": "game:shears-*", "isTool": true, "toolDurabilityCost": 100 }		
+		},
+		"copyAttributesFrom": "A",
+		"averageDurability": false,
+		"width": 3,
+		"height": 3,
+		"name": "Insignia Bracket",
+		"output": { "type": "item", "code": "facore:brackets-insignia" }
+	}
+]
