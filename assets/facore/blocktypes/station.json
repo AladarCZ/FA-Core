@@ -1,10 +1,15 @@
 {
   "code": "fa-workstation",
+  "class": "FAStation",
+  "entityClass": "FAStation",
 	"creativeinventory": { "general": ["*"], "items": ["*"], "forgottenarmorycore": ["*west"] },
   "variantGroups": [
     { "code": "purpose", "states": [ "decoration", "cover", "trim" ]},
     { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
   ],	
+  "behaviors": [
+    { "name": "HorizontalOrientable" }
+  ],
   "selectionbox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.5,  "z2": 1},
 	"collisionbox": { "x1": 0, "y1": 0, "z1": 0, "x2": 1, "y2": 0.5,  "z2": 1},
   "behaviorsByType": {
@@ -13,47 +18,52 @@
         "name": "Multiblock",
         "propertiesByType": {
           "*-north": {
-            "sizex": 0.3,
-            "sizey": 0.3,
+            "sizex": 2,
+            "sizey": 1,
             "sizez": 1,
             "cposition": {
               "x": 0,
               "y": 0,
-              "z": -1
+              "z": 0
             }
           },
           "*-east": {
             "sizex": 1,
-            "sizey": 0.3,
-            "sizez": 0.3,
+            "sizey": 1,
+            "sizez": 2,
             "cposition": {
               "x": 0,
               "y": 0,
-              "z": -1
+              "z": 0
             }
           },
           "*-south": {
-            "sizex": 0.3,
-            "sizey": 0.3,
+            "sizex": 2,
+            "sizey": 1,
             "sizez": 1,
             "cposition": {
-              "x": 0,
+              "x": 1,
               "y": 0,
-              "z": -1
+              "z": 0
             }
           },
           "*-west": {
             "sizex": 1,
-            "sizey": 0.3,
-            "sizez": 0.3,
+            "sizey": 1,
+            "sizez": 2,
             "cposition": {
               "x": 0,
               "y": 0,
-              "z": -1
+              "z": 1
             }
           }
         }
       }
+    ]
+  },
+  "entityBehaviorsByType": {
+    "*-cover-*": [
+      { "name": "Animatable" }
     ]
   },
   "collisionBoxByType": {
@@ -168,7 +178,9 @@
 	"texturesByType": {
 		"*": { 
 			"station": { "base": "block/stations/{purpose}" },
-      "liquid": { "base": "armor/entity/trim/none" }
+      "liquid": { "base": "armor/entity/trim/none" },
+      "fuel": { "base": "armor/entity/trim/none" }
+    }
   },
   "tpHandTransform": {
     "translation": {

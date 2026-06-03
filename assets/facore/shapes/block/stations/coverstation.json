@@ -2337,8 +2337,8 @@
 			"name": "lidopen",
 			"code": "lidopen",
 			"quantityframes": 21,
-			"onActivityStopped": "Stop",
-			"onAnimationEnd": "Stop",
+			"onActivityStopped": "Rewind",
+			"onAnimationEnd": "Hold",
 			"keyframes": [
 				{
 					"frame": 0,
@@ -2372,8 +2372,8 @@
 			"name": "fuelopen",
 			"code": "fuelopen",
 			"quantityframes": 10,
-			"onActivityStopped": "Stop",
-			"onAnimationEnd": "Stop",
+			"onActivityStopped": "Rewind",
+			"onAnimationEnd": "Hold",
 			"keyframes": [
 				{
 					"frame": 0,
