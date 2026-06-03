@@ -123,6 +123,7 @@ public class BlockEntityFACoverStation : BlockEntity
     private ItemStack? liquidStack;
     private ItemStack? immersedStack;
     private ItemStack? fuelStack;
+    private ItemStack? tableStack;
     private string processMode = "";
     private string processMetal = "";
     private double processStartHours = -1;
@@ -184,7 +185,7 @@ public class BlockEntityFACoverStation : BlockEntity
                 return;
 
             case "TableStorage":
-                TryInteractCauldronItem(byPlayer);
+                TryInteractTableStorage(byPlayer);
                 return;
 
             default:
@@ -251,7 +252,71 @@ public class BlockEntityFACoverStation : BlockEntity
     {
         return TryGetMetalPlateMetal(stack, out _) || TryGetFAArmorPiece(stack, out _);
     }
+    private void TryInteractTableStorage(IPlayer byPlayer)
+{
+    UpdateProcess();
 
+    ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+
+    if (activeSlot == null || activeSlot.Empty)
+    {
+        TryTakeTableItem(byPlayer);
+        return;
+    }
+
+    if (!byPlayer.Entity.Controls.ShiftKey)
+    {
+        Notify(byPlayer, "Sneak + right click to place item on the table.");
+        return;
+    }
+
+    TryPlaceTableItem(byPlayer, activeSlot);
+}
+
+private void TryPlaceTableItem(IPlayer byPlayer, ItemSlot activeSlot)
+{
+    if (tableStack != null)
+    {
+        Notify(byPlayer, "The table already holds an item.");
+        return;
+    }
+
+    ItemStack? heldStack = activeSlot.Itemstack;
+    if (heldStack == null)
+    {
+        return;
+    }
+
+    ItemStack? placed = activeSlot.TakeOut(1);
+    if (placed == null)
+    {
+        return;
+    }
+
+    tableStack = placed;
+    activeSlot.MarkDirty();
+
+    MarkStationDirty();
+}
+
+    private void TryTakeTableItem(IPlayer byPlayer)
+    {
+        if (tableStack == null)
+        {
+            Notify(byPlayer, "There is nothing on the table.");
+            return;
+        }
+
+        ItemStack takeStack = tableStack;
+        tableStack = null;
+
+        if (!byPlayer.InventoryManager.TryGiveItemstack(takeStack, true))
+        {
+            Api.World.SpawnItemEntity(takeStack, Pos.ToVec3d().Add(0.5, 1.05, 0.5));
+        }
+
+        MarkStationDirty();
+    }
     public bool HasImmersedItem => immersedStack != null;
     public bool HasLiquid => liquidStack != null && liquidStack.StackSize > 0;
     public bool HasFuel => fuelStack != null && fuelStack.StackSize > 0;
@@ -289,6 +354,7 @@ public class BlockEntityFACoverStation : BlockEntity
         SetOrRemoveItemstack(tree, "liquidStack", liquidStack);
         SetOrRemoveItemstack(tree, "immersedStack", immersedStack);
         SetOrRemoveItemstack(tree, "fuelStack", fuelStack);
+        SetOrRemoveItemstack(tree, "tableStack", tableStack);
     }
 
     public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
@@ -304,6 +370,7 @@ public class BlockEntityFACoverStation : BlockEntity
         liquidStack = ResolveItemstack(tree.GetItemstack("liquidStack"), worldForResolving);
         immersedStack = ResolveItemstack(tree.GetItemstack("immersedStack"), worldForResolving);
         fuelStack = ResolveItemstack(tree.GetItemstack("fuelStack"), worldForResolving);
+        tableStack = ResolveItemstack(tree.GetItemstack("tableStack"), worldForResolving);
 
         if (Api?.Side == EnumAppSide.Client)
         {
@@ -365,12 +432,95 @@ public class BlockEntityFACoverStation : BlockEntity
             DebugLiquidLog($"OnTesselation adding immersed item mesh after liquid. vertices={immersedMesh.VerticesCount}, indices={immersedMesh.IndicesCount}, bounds={FormatMeshBounds(immersedMesh)}");
             mesher.AddMeshData(immersedMesh, 1);
         }
-
+        MeshData? tableMesh = CreateTableStorageItemMesh(tessThreadTesselator);
+        if (tableMesh != null)
+        {
+            mesher.AddMeshData(tableMesh, 1);
+        }
 
 
         return skipDefaultMesh;
     }
+    private MeshData? CreateTableStorageItemMesh(ITesselatorAPI tessThreadTesselator)
+{
+    if (Api is not ICoreClientAPI capi || tableStack?.Collectible == null)
+    {
+        return null;
+    }
 
+    Item item = tableStack.Item;
+    if (item?.Shape?.Base == null)
+    {
+        return null;
+    }
+
+    AssetLocation shapeLocation = item.Shape.Base.Clone()
+        .WithPathPrefixOnce("shapes/")
+        .WithPathAppendixOnce(".json");
+
+    Shape? shape = Shape.TryGet(Api, shapeLocation);
+    if (shape == null)
+    {
+        return null;
+    }
+
+    ITexPositionSource fallbackTextureSource = capi.Tesselator.GetTextureSource(Block, 0, false);
+    ITexPositionSource textureSource = new ItemBlockAtlasTextureSource(capi, fallbackTextureSource, item);
+
+    tessThreadTesselator.TesselateShape(
+        "facore-coverstation-tableitem",
+        shape,
+        out MeshData mesh,
+        textureSource,
+        new Vec3f(Block.Shape.rotateX, Block.Shape.rotateY, Block.Shape.rotateZ)
+    );
+
+    if (mesh == null || mesh.VerticesCount <= 0)
+    {
+        return null;
+    }
+
+    ForceOpaqueRenderPass(mesh);
+    AlignTableStorageItemMesh(mesh);
+    return mesh;
+}
+private void AlignTableStorageItemMesh(MeshData mesh)
+{
+    if (!TryGetMeshBounds(mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ))
+    {
+        return;
+    }
+
+    var origin = new Vec3f(
+        (minX + maxX) * 0.5f,
+        (minY + maxY) * 0.5f,
+        (minZ + maxZ) * 0.5f
+    );
+
+    float maxDimension = Math.Max(Math.Max(maxX - minX, maxY - minY), maxZ - minZ);
+    if (maxDimension > 0)
+    {
+        float scale = 0.35f / maxDimension;
+        mesh.Scale(origin, scale, scale, scale);
+    }
+
+    mesh.Rotate(origin, GameMath.PIHALF, 0f, GameMath.PI * 0.08f);
+
+    if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+    {
+        return;
+    }
+
+    float targetX = 0.5f;
+    float targetY = 1.03f;
+    float targetZ = 0.5f;
+
+    mesh.Translate(
+        targetX - ((minX + maxX) * 0.5f),
+        targetY - minY,
+        targetZ - ((minZ + maxZ) * 0.5f)
+    );
+}
     public override void OnBlockBroken(IPlayer byPlayer)
     {
         StopProcessLoopSound(immediate: true);
@@ -386,6 +536,12 @@ public class BlockEntityFACoverStation : BlockEntity
         {
             Api.World.SpawnItemEntity(fuelStack, Pos.ToVec3d().Add(0.5, 0.35, 0.5));
             fuelStack = null;
+        }
+
+        if (tableStack != null)
+        {
+            Api.World.SpawnItemEntity(tableStack, Pos.ToVec3d().Add(0.5, 1.05, 0.5));
+            tableStack = null;
         }
     }
 
