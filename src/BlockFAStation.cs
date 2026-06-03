@@ -12,6 +12,7 @@ namespace FACore;
 
 public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 {
+    private const double TableStorageHitNudge = 0.08;
     private Cuboidf[]? selectionBoxes;
     private List<StationElementZone> elementZones = [];
     private List<StationElementZone> selectableZones = [];
@@ -21,6 +22,8 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         base.OnLoaded(api);
 
         if (!IsCoverStation()) return;
+
+        SideSolid[BlockFacing.UP.Index] = true;
 
         Vec3i partOffset = GetPartOffset();
         elementZones = StationShapeElementReader.LoadElementZones(api, this);
@@ -253,6 +256,12 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             : base.GetCollisionBoxes(blockAccessor, pos);
     }
 
+    public override bool CanAttachBlockAt(IBlockAccessor blockAccessor, Block block, BlockPos pos, BlockFacing blockFace, Cuboidi attachmentArea)
+    {
+        return IsCoverStation() && blockFace == BlockFacing.UP
+            || base.CanAttachBlockAt(blockAccessor, block, pos, blockFace, attachmentArea);
+    }
+
     public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
     {
         if (!IsCoverStation()) return base.OnBlockInteractStart(world, byPlayer, blockSel);
@@ -277,7 +286,8 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
         if (zone.ActionName == "TableStorage")
         {
-            return base.OnBlockInteractStart(world, byPlayer, blockSel);
+            NudgeTableStorageHitPosition(blockSel);
+            return false;
         }
 
         if (world.Side == EnumAppSide.Client)
@@ -389,7 +399,8 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
         if (zone.ActionName == "TableStorage")
         {
-            return base.OnBlockInteractStart(world, byPlayer, blockSel);
+            NudgeTableStorageHitPosition(blockSel);
+            return false;
         }
 
         if (world.Side == EnumAppSide.Client)
@@ -502,6 +513,29 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         }
 
         return bestZone;
+    }
+
+    private void NudgeTableStorageHitPosition(BlockSelection selection)
+    {
+        if (selection.HitPosition == null)
+        {
+            return;
+        }
+
+        Vec3d right = GetTableRightVector(GetSide());
+        selection.HitPosition.X = GameMath.Clamp(selection.HitPosition.X + right.X * TableStorageHitNudge, 0.001, 0.999);
+        selection.HitPosition.Z = GameMath.Clamp(selection.HitPosition.Z + right.Z * TableStorageHitNudge, 0.001, 0.999);
+    }
+
+    private static Vec3d GetTableRightVector(BlockFacing side)
+    {
+        return side.Code switch
+        {
+            "east" => new Vec3d(0, 0, -1),
+            "south" => new Vec3d(1, 0, 0),
+            "west" => new Vec3d(0, 0, 1),
+            _ => new Vec3d(-1, 0, 0)
+        };
     }
 
     private bool IsCoverStation()
@@ -821,7 +855,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             "FuelDoor" => be?.FuelOpen == true ? "Close fuel door" : "Open fuel door",
             "Fuel" => GetFuelInteractionText(be, heldStack),
             "LiquidPour" => GetLiquidInteractionText(be, heldStack),
-            "TableStorage" => heldStack == null ? "Use storage" : "Place item",
+            "TableStorage" => heldStack == null ? "Table top" : "Place item",
             _ => "Use"
         };
     }
