@@ -1,126 +1,99 @@
 {
-	code: "coating-full",
-	class: "ItemLiquidPortion",
-	matterState: "liquid",
-	variantgroups: [
+	"code": "coating-full",
+	"class": "ItemLiquidPortion",
+	"matterState": "liquid",
+	"variantgroups": [
 		{
-			code: "type",
-			states: [
+			"code": "type",
+			"states"	: [
 				"bismuth",
 				"bismuthbronze",
 				"blackbronze",
 				"brass",
-				"chromium",
 				"copper",
 				"cupronickel",
 				"electrum",
 				"gold",
-				"iron",
 				"lead",
 				"meteoriciron",
-				"molybdochalkos",
-				"nickel",
-				"platinum",
 				"silver",
-				"stainlesssteel",
-				"steel",
-				"tin",
 				"tinbronze",
-				"titanium",
 				"uranium",
 				"zinc"
 			]
 		}
 	],
-	attributes: {
-		handbook: {
-			ignoreCreativeInvStacks: true,
-			groupBy: ["coating-full-*"]
+	"attributes": {
+		"handbook": {
+			"ignoreCreativeInvStacks": true,
+			"groupBy": ["coating-full-*"]
 		},
-		waterTightContainerProps: {
-			containable: true,
-			isopaque: true,
-			itemsPerLitre: 100,
-			textureByType: {
-				"coating-full-bismuth": { base: "survival:block/liquid/dye/purple", alpha: 170 },
-				"coating-full-bismuthbronze": { base: "survival:block/liquid/dye/brown", alpha: 170 },
-				"coating-full-blackbronze": { base: "survival:block/liquid/dye/black", alpha: 170 },
-				"coating-full-brass": { base: "survival:block/liquid/dye/yellow", alpha: 170 },
-				"coating-full-chromium": { base: "survival:block/liquid/dye/white", alpha: 160 },
-				"coating-full-copper": { base: "survival:block/liquid/dye/orange", alpha: 170 },
-				"coating-full-cupronickel": { base: "survival:block/liquid/dye/gray", alpha: 160 },
-				"coating-full-electrum": { base: "survival:block/liquid/dye/yellow", alpha: 170 },
-				"coating-full-gold": { base: "survival:block/liquid/dye/yellow", alpha: 180 },
-				"coating-full-iron": { base: "survival:block/liquid/dye/gray", alpha: 170 },
-				"coating-full-lead": { base: "survival:block/liquid/dye/gray", alpha: 180 },
-				"coating-full-meteoriciron": { base: "survival:block/liquid/dye/gray", alpha: 170 },
-				"coating-full-molybdochalkos": { base: "survival:block/liquid/dye/orange", alpha: 170 },
-				"coating-full-nickel": { base: "survival:block/liquid/dye/gray", alpha: 160 },
-				"coating-full-platinum": { base: "survival:block/liquid/dye/white", alpha: 170 },
-				"coating-full-silver": { base: "survival:block/liquid/dye/white", alpha: 170 },
-				"coating-full-stainlesssteel": { base: "survival:block/liquid/dye/gray", alpha: 160 },
-				"coating-full-steel": { base: "survival:block/liquid/dye/gray", alpha: 170 },
-				"coating-full-tin": { base: "survival:block/liquid/dye/white", alpha: 150 },
-				"coating-full-tinbronze": { base: "survival:block/liquid/dye/brown", alpha: 170 },
-				"coating-full-titanium": { base: "survival:block/liquid/dye/white", alpha: 160 },
-				"coating-full-uranium": { base: "survival:block/liquid/dye/green", alpha: 170 },
-				"coating-full-zinc": { base: "survival:block/liquid/dye/white", alpha: 150 },
-				"*": { base: "survival:block/liquid/dye/red", alpha: 170 }
+		"waterTightContainerProps": {
+			"containable": true,
+			"isopaque": true,
+			"itemsPerLitre": 100,
+			"textureByType": {
+				"coating-full-bismuth": { "base": "survival:block/liquid/dye/purple", "alpha": 170 },
+				"coating-full-bismuthbronze": { "base": "survival:block/liquid/dye/brown", "alpha": 170 },
+				"coating-full-blackbronze": { "base": "survival:block/liquid/dye/black", "alpha": 170 },
+				"coating-full-brass": { "base": "survival:block/liquid/dye/yellow", "alpha": 170 },
+				"coating-full-copper": { "base": "survival:block/liquid/dye/orange", "alpha": 170 },
+				"coating-full-cupronickel": { "base": "survival:block/liquid/dye/gray", "alpha": 160 },
+				"coating-full-electrum": { "base": "survival:block/liquid/dye/yellow", "alpha": 170 },
+				"coating-full-gold": { "base": "survival:block/liquid/dye/yellow", "alpha": 180 },
+				"coating-full-lead": { "base": "survival:block/liquid/dye/gray", "alpha": 180 },
+				"coating-full-meteoriciron": { "base": "survival:block/liquid/dye/gray", "alpha": 170 },
+				"coating-full-silver": { "base": "survival:block/liquid/dye/white", "alpha": 170 },
+				"coating-full-tinbronze": { "base": "survival:block/liquid/dye/brown", "alpha": 170 },
+				"coating-full-uranium": { "base": "survival:block/liquid/dye/green", "alpha": 170 },
+				"coating-full-zinc": { "base": "survival:block/liquid/dye/white", "alpha": 150 },
+				"*": { "base": "survival:block/liquid/dye/red", "alpha": 170 }
 			},
-			isOpaqueByType: {
+			"isOpaqueByType": {
 				"*": true
 			},
-			allowSpill: true,
-			whenSpilled: {
-				action: "DropContents",
-				stack: { type: "item", code: "facore:coating-full-{type}" }
+			"allowSpill": true,
+			"whenSpilled": {
+				"action": "DropContents",
+				"stack": { "type": "item", "code": "facore:coating-full-{type}" }
 			}
 		}
 	},
-	shape: { base: "survival:item/liquid" },
-	textureByType: {
-		"coating-full-bismuth": { base: "survival:block/liquid/dye/purple", alpha: 170 },
-		"coating-full-bismuthbronze": { base: "survival:block/liquid/dye/brown", alpha: 170 },
-		"coating-full-blackbronze": { base: "survival:block/liquid/dye/black", alpha: 170 },
-		"coating-full-brass": { base: "survival:block/liquid/dye/yellow", alpha: 170 },
-		"coating-full-chromium": { base: "survival:block/liquid/dye/white", alpha: 160 },
-		"coating-full-copper": { base: "survival:block/liquid/dye/orange", alpha: 170 },
-		"coating-full-cupronickel": { base: "survival:block/liquid/dye/gray", alpha: 160 },
-		"coating-full-electrum": { base: "survival:block/liquid/dye/yellow", alpha: 170 },
-		"coating-full-gold": { base: "survival:block/liquid/dye/yellow", alpha: 180 },
-		"coating-full-iron": { base: "survival:block/liquid/dye/gray", alpha: 170 },
-		"coating-full-lead": { base: "survival:block/liquid/dye/gray", alpha: 180 },
-		"coating-full-meteoriciron": { base: "survival:block/liquid/dye/gray", alpha: 170 },
-		"coating-full-molybdochalkos": { base: "survival:block/liquid/dye/orange", alpha: 170 },
-		"coating-full-nickel": { base: "survival:block/liquid/dye/gray", alpha: 160 },
-		"coating-full-platinum": { base: "survival:block/liquid/dye/white", alpha: 170 },
-		"coating-full-silver": { base: "survival:block/liquid/dye/white", alpha: 170 },
-		"coating-full-stainlesssteel": { base: "survival:block/liquid/dye/gray", alpha: 160 },
-		"coating-full-steel": { base: "survival:block/liquid/dye/gray", alpha: 170 },
-		"coating-full-tin": { base: "survival:block/liquid/dye/white", alpha: 150 },
-		"coating-full-tinbronze": { base: "survival:block/liquid/dye/brown", alpha: 170 },
-		"coating-full-titanium": { base: "survival:block/liquid/dye/white", alpha: 160 },
-		"coating-full-uranium": { base: "survival:block/liquid/dye/green", alpha: 170 },
-		"coating-full-zinc": { base: "survival:block/liquid/dye/white", alpha: 150 },
-		"*": { base: "survival:block/liquid/dye/red", alpha: 170 }
+	"shape": { "base": "survival:item/liquid" },
+	"textureByType": {
+		"coating-full-bismuth": { "base": "survival:block/liquid/dye/purple", "alpha": 170 },
+		"coating-full-bismuthbronze": { "base": "survival:block/liquid/dye/brown", "alpha": 170 },
+		"coating-full-blackbronze": { "base": "survival:block/liquid/dye/black", "alpha": 170 },
+		"coating-full-brass": { "base": "survival:block/liquid/dye/yellow", "alpha": 170 },
+		"coating-full-copper": { "base": "survival:block/liquid/dye/orange", "alpha": 170 },
+		"coating-full-cupronickel": { "base": "survival:block/liquid/dye/gray", "alpha": 160 },
+		"coating-full-electrum": { "base": "survival:block/liquid/dye/yellow", "alpha": 170 },
+		"coating-full-gold": { "base": "survival:block/liquid/dye/yellow", "alpha": 180 },
+		"coating-full-lead": { "base": "survival:block/liquid/dye/gray", "alpha": 180 },
+		"coating-full-meteoriciron": { "base": "survival:block/liquid/dye/gray", "alpha": 170 },
+		"coating-full-silver": { "base": "survival:block/liquid/dye/white", "alpha": 170 },
+		"coating-full-tinbronze": { "base": "survival:block/liquid/dye/brown", "alpha": 170 },
+		"coating-full-uranium": { "base": "survival:block/liquid/dye/green", "alpha": 170 },
+		"coating-full-zinc": { "base": "survival:block/liquid/dye/white", "alpha": 150 },
+		"*": { "base": "survival:block/liquid/dye/red", "alpha": 170 }
 	},
-	creativeinventoryStacks: [
+	"creativeinventoryStacks": [
 	{
-		tabs: ["general", "liquids", "forgottenarmorycore"],
-		stacks: [
+		"tabs": ["general", "liquids", "forgottenarmorycore"],
+		"stacks": [
 		]
 	}
 	],
-	maxstacksize: 5000,
-	materialDensity: 200,
-	guiTransform: {
-		translation: { x: 0, y: 1, z: 0 },
-		rotation: { x: 123, y: -33, z: -13 },
-		origin: { x: 0.5, y: 0, z: 0.5 },
-		scale: 1.4
+	"maxstacksize": 5000,
+	"materialDensity": 200,
+	"guiTransform": {
+		"translation": { "x": 0, "y": 1, "z": 0 },
+		"rotation": { "x": 123, "y": -33, "z": -13 },
+		"origin": { "x": 0.5, "y": 0, "z": 0.5 },
+		"scale": 1.4
 	},
-	tpHandTransform: {
-		translation: { x: -1.5, y: -1, z: -1.4 }
+	"tpHandTransform": {
+		"translation": { "x": -1.5, "y": -1, "z": -1.4 }
 	}
 }
 
