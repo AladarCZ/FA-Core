@@ -47,40 +47,18 @@ public class BlockEntityFACoverStation : BlockEntity
         ["bismuthbronze"] = "brown",
         ["blackbronze"] = "black",
         ["brass"] = "yellow",
-        ["chromium"] = "white",
         ["copper"] = "orange",
         ["cupronickel"] = "gray",
         ["electrum"] = "yellow",
         ["gold"] = "yellow",
-        ["iron"] = "gray",
         ["lead"] = "gray",
         ["meteoriciron"] = "gray",
-        ["molybdochalkos"] = "orange",
-        ["nickel"] = "gray",
-        ["platinum"] = "white",
         ["silver"] = "white",
-        ["stainlesssteel"] = "gray",
-        ["steel"] = "gray",
-        ["tin"] = "white",
         ["tinbronze"] = "brown",
-        ["titanium"] = "white",
         ["uranium"] = "green",
         ["zinc"] = "white"
     };
     private static readonly AssetLocation CharcoalCode = new("game:charcoal");
-    private static readonly HashSet<string> SupportedArmorCoatingMetals = new(StringComparer.Ordinal)
-    {
-        "copper",
-        "cupronickel",
-        "brass",
-        "zinc",
-        "blackbronze",
-        "lead",
-        "silver",
-        "meteoriciron",
-        "gold",
-        "electrum"
-    };
     private static readonly AssetLocation[] FallbackForgeCoalShapes =
     [
         new("survival", "shapes/block/stone/forge/coal"),
@@ -96,8 +74,10 @@ public class BlockEntityFACoverStation : BlockEntity
     private const int MaxCharcoalPieces = 5;
     private const double PlateRestHours = 2.0;
     private const double ArmorCoatingHours = 2.0;
+    private const double ArmorDissolveHours = 2.0;
     private const string ProcessPlateResting = "plate";
     private const string ProcessArmorCoating = "armor";
+    private const string ProcessArmorDissolving = "dissolve";
     private const float LiquidParentOffsetY = 7.5f / 16f;
     private const float LiquidMinY = 0.36f + LiquidParentOffsetY;
     private const float LiquidMaxY = 0.55f + LiquidParentOffsetY;
@@ -116,6 +96,12 @@ public class BlockEntityFACoverStation : BlockEntity
     private const float FuelMinY = 1f / 16f;
     private const float FuelMinZ = 1.5f / 16f;
     private const float FuelMaxZ = 13.5f / 16f;
+    private const float TableMinX = 0f / 16f;
+    private const float TableMaxX = 14f / 16f;
+    private const float TableMinZ = 0f / 16f;
+    private const float TableMaxZ = 16f / 16f;
+    private const float TableTopY = 18f / 16f + 0.003f;
+    private const float TableItemMaxDimension = 0.44f;
 
     private bool lidOpen;
     private bool fuelOpen;
@@ -155,7 +141,7 @@ public class BlockEntityFACoverStation : BlockEntity
                 UpdateProcess();
                 if (fuelLit || processMode == ProcessArmorCoating)
                 {
-                    Notify(byPlayer, "The cauldron is too hot to open.");
+                    Notify(byPlayer, "Wait for the cauldron to cool before opening it.");
                     return;
                 }
 
@@ -184,8 +170,12 @@ public class BlockEntityFACoverStation : BlockEntity
                 TryInteractLiquid(byPlayer);
                 return;
 
+            case "TableStorage":
+                TryInteractTable(byPlayer);
+                return;
+
             default:
-                Notify(byPlayer, $"{actionName} zone is detected.");
+                Notify(byPlayer, "This part of the station cannot be used right now.");
                 return;
         }
     }
@@ -251,6 +241,7 @@ public class BlockEntityFACoverStation : BlockEntity
     public bool HasImmersedItem => immersedStack != null;
     public bool HasLiquid => liquidStack != null && liquidStack.StackSize > 0;
     public bool HasFuel => fuelStack != null && fuelStack.StackSize > 0;
+    public bool HasTableItem => tableStack != null;
 
     public override void Initialize(ICoreAPI api)
     {
@@ -328,6 +319,15 @@ public class BlockEntityFACoverStation : BlockEntity
             {
                 DebugFuelLog($"OnTesselation adding fuel mesh. vertices={fuelMesh.VerticesCount}, indices={fuelMesh.IndicesCount}");
                 mesher.AddMeshData(fuelMesh, 1);
+            }
+        }
+
+        if (tableStack != null)
+        {
+            MeshData? tableMesh = TryCreateTableItemMesh(tessThreadTesselator);
+            if (tableMesh != null)
+            {
+                mesher.AddMeshData(tableMesh, 1);
             }
         }
 
@@ -440,26 +440,26 @@ public class BlockEntityFACoverStation : BlockEntity
         ItemStack? heldStack = activeSlot.Itemstack;
         if (!IsStationFuel(heldStack))
         {
-            Notify(byPlayer, "Hold charcoal or coal.");
+            Notify(byPlayer, "Hold coal or charcoal to fuel the station.");
             return;
         }
 
         if (fuelLit)
         {
-            Notify(byPlayer, "The fuel is already lit.");
+            Notify(byPlayer, "The fuel is already burning.");
             return;
         }
 
         if (fuelStack != null && !fuelStack.Equals(Api.World, heldStack, GlobalConstants.IgnoredStackAttributes))
         {
-            Notify(byPlayer, "Take out the current fuel before adding a different one.");
+            Notify(byPlayer, "Remove the current fuel before adding a different fuel type.");
             return;
         }
 
         int room = MaxCharcoalPieces - (fuelStack?.StackSize ?? 0);
         if (room <= 0)
         {
-            Notify(byPlayer, $"The fuel tray is full ({MaxCharcoalPieces}/{MaxCharcoalPieces}).");
+            Notify(byPlayer, "The fuel tray is already full.");
             return;
         }
 
@@ -476,7 +476,7 @@ public class BlockEntityFACoverStation : BlockEntity
         activeSlot.MarkDirty();
         PlayCharcoalPlaceSound(byPlayer);
         MarkStationDirty();
-        Notify(byPlayer, $"Added {inserted.StackSize}x {inserted.GetName()}.");
+        NotifyInfo(byPlayer, $"Added {inserted.StackSize}x {inserted.GetName()} to the fuel tray.");
     }
 
     private void TryTakeFuel(IPlayer byPlayer)
@@ -489,7 +489,7 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (fuelLit)
         {
-            Notify(byPlayer, "The fuel is lit.");
+            Notify(byPlayer, "The fuel is burning and cannot be removed.");
             return;
         }
 
@@ -509,56 +509,59 @@ public class BlockEntityFACoverStation : BlockEntity
 
         MarkStationDirty();
         PlayCharcoalPlaceSound(byPlayer);
-        Notify(byPlayer, $"Took 1x {takeName}.");
+        NotifyInfo(byPlayer, $"Removed 1x {takeName} from the fuel tray.");
+    }
+
+    private void TryInteractTable(IPlayer byPlayer)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+
+        if (tableStack != null)
+        {
+            if (heldStack != null)
+            {
+                Notify(byPlayer, "The table is already holding an item.");
+                return;
+            }
+
+            ItemStack takeStack = tableStack;
+            tableStack = null;
+            string takeName = takeStack.GetName();
+            if (!byPlayer.InventoryManager.TryGiveItemstack(takeStack, true))
+            {
+                Api.World.SpawnItemEntity(takeStack, Pos.ToVec3d().Add(0.5, 1.1, 0.5));
+            }
+
+            MarkStationDirty();
+            NotifyInfo(byPlayer, $"Picked up {takeName} from the table.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, "The table is empty.");
+            return;
+        }
+
+        tableStack = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed {tableStack.GetName()} on the table.");
     }
 
     private void TryLightFuel(IPlayer byPlayer)
     {
         UpdateProcess();
 
-        if (fuelStack == null)
+        ItemStack? heldStack = byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+        if (!CanLightFuel(heldStack))
         {
-            Notify(byPlayer, "Add fuel first.");
+            Notify(byPlayer, "Hold an igniter to light the fuel.");
             return;
         }
 
-        if (fuelStack.StackSize < MaxCharcoalPieces)
-        {
-            Notify(byPlayer, $"Load the fuel tray fully first ({MaxCharcoalPieces}/{MaxCharcoalPieces} fuel).");
-            return;
-        }
-
-        if (fuelLit)
-        {
-            Notify(byPlayer, "The fuel is already lit.");
-            return;
-        }
-
-        if (lidOpen)
-        {
-            Notify(byPlayer, "Close the cauldron lid before lighting the fuel.");
-            return;
-        }
-
-        if (processMode == ProcessPlateResting)
-        {
-            Notify(byPlayer, "Let the metal plate finish reacting before lighting the fuel.");
-            return;
-        }
-
-        if (!TryGetCoatingMetal(liquidStack, out string coatingMetal))
-        {
-            Notify(byPlayer, "Prepare coating liquid before lighting the fuel.");
-            return;
-        }
-
-        if (!TryGetFAArmorPiece(immersedStack, out string piece))
-        {
-            Notify(byPlayer, "Put a coatable FA armor piece into the cauldron first.");
-            return;
-        }
-
-        if (!CanApplyArmorCoating(immersedStack, piece, coatingMetal, out string failure))
+        if (!CanStartFuelIgnition(out string failure, out string coatingMetal, out FAArmorInfo armorInfo))
         {
             Notify(byPlayer, failure);
             return;
@@ -569,7 +572,76 @@ public class BlockEntityFACoverStation : BlockEntity
         PlayStationSound(IgniteSound, byPlayer);
         PlayBubblingSound(byPlayer);
         MarkStationDirty();
-        Notify(byPlayer, $"Lit the fuel. Coating will finish in {ArmorCoatingHours:0.#} in-game hours.");
+        NotifyInfo(byPlayer, $"Fuel lit. Coating will finish in {ArmorCoatingHours:0.#} in-game hours.");
+    }
+
+    public bool CanStartFuelIgnition(IPlayer byPlayer)
+    {
+        UpdateProcess();
+
+        ItemStack? heldStack = byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+        return CanLightFuel(heldStack) && CanStartFuelIgnition(out _, out _, out _);
+    }
+
+    public void CompleteFuelIgnition(IPlayer byPlayer)
+    {
+        TryLightFuel(byPlayer);
+    }
+
+    private bool CanStartFuelIgnition(out string failure, out string coatingMetal, out FAArmorInfo armorInfo)
+    {
+        failure = "";
+        coatingMetal = "";
+        armorInfo = null!;
+
+        if (fuelStack == null)
+        {
+            failure = "Add fuel before lighting the station.";
+            return false;
+        }
+
+        if (fuelStack.StackSize < MaxCharcoalPieces)
+        {
+            failure = $"Fill the fuel tray before lighting it ({MaxCharcoalPieces}/{MaxCharcoalPieces} fuel).";
+            return false;
+        }
+
+        if (fuelLit)
+        {
+            failure = "The fuel is already burning.";
+            return false;
+        }
+
+        if (lidOpen)
+        {
+            failure = "Close the cauldron lid before lighting the fuel.";
+            return false;
+        }
+
+        if (processMode == ProcessPlateResting || processMode == ProcessArmorDissolving)
+        {
+            failure = "Wait for the acid reaction to finish before lighting the fuel.";
+            return false;
+        }
+
+        if (!TryGetCoatingMetal(liquidStack, out coatingMetal))
+        {
+            failure = "Prepare coating liquid before lighting the fuel.";
+            return false;
+        }
+
+        if (!TryGetFAArmorInfo(immersedStack, out armorInfo))
+        {
+            failure = "Place a coatable armor piece in the cauldron first.";
+            return false;
+        }
+
+        if (!CanApplyArmorCoating(immersedStack, armorInfo, coatingMetal, out failure))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private void TryInteractLiquid(IPlayer byPlayer)
@@ -585,11 +657,11 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (activeSlot.Itemstack == null)
         {
-            Notify(byPlayer, liquidStack == null ? "The cauldron is empty." : $"The cauldron contains {FormatLitres(liquidStack.StackSize)}/{LiquidCapacityLitres}L {GetLiquidName(liquidStack)}.");
+            NotifyInfo(byPlayer, liquidStack == null ? "The cauldron is empty." : $"Cauldron: {FormatLitres(liquidStack.StackSize)}/{LiquidCapacityLitres}L {GetLiquidName(liquidStack)}.");
             return;
         }
 
-        if (CanTakeSulfuricAcid(activeSlot))
+        if (CanTakeCauldronLiquid(activeSlot))
         {
             TryPourIntoCauldron(byPlayer, activeSlot);
             return;
@@ -605,7 +677,7 @@ public class BlockEntityFACoverStation : BlockEntity
         if (heldStack?.Collectible is ILiquidInterface or ILiquidSource or ILiquidSink)
         {
             Notify(byPlayer, liquidStack == null
-                ? "Only sulfuric acid can be poured into this cauldron."
+                ? "Only sulfuric acid or coating liquid can be poured into this cauldron."
                 : $"That container cannot interact with {GetLiquidName(liquidStack)}.");
             return;
         }
@@ -617,41 +689,37 @@ public class BlockEntityFACoverStation : BlockEntity
     {
         if (HasActiveProcess() || fuelLit)
         {
-            Notify(byPlayer, "The cauldron is busy.");
+            Notify(byPlayer, "The cauldron is already processing.");
             return;
         }
 
         if (immersedStack != null)
         {
-            Notify(byPlayer, "Take out the immersed item before changing the liquid.");
-            return;
-        }
-
-        if (liquidStack != null && !IsSulfuricAcid(liquidStack))
-        {
-            Notify(byPlayer, $"The cauldron already contains {GetLiquidName(liquidStack)}.");
+            Notify(byPlayer, "Remove the immersed item before changing the liquid.");
             return;
         }
 
         int missing = LiquidCapacityItems - (liquidStack?.StackSize ?? 0);
         if (missing <= 0)
         {
-            Notify(byPlayer, $"The cauldron already has {LiquidCapacityLitres}L of sulfuric acid.");
+            Notify(byPlayer, liquidStack == null
+                ? "The cauldron is already full."
+                : $"The cauldron already contains {LiquidCapacityLitres}L of {GetLiquidName(liquidStack)}.");
             return;
         }
 
-        if (!TryTakeSulfuricAcid(activeSlot, missing, out ItemStack acidStack, out string failure))
+        if (!TryTakeCauldronLiquid(activeSlot, missing, out ItemStack pourStack, out string failure))
         {
             Notify(byPlayer, failure);
             return;
         }
 
-        int inserted = InsertLiquid(acidStack);
+        int inserted = InsertLiquid(pourStack);
         activeSlot.MarkDirty();
         PlayStationSound(WaterPourSound, byPlayer);
         MarkStationDirty();
         DebugLiquidLog($"TryPourIntoCauldron inserted={inserted}, liquidStack={FormatStackDebug(liquidStack)}, heldAfter={FormatStackDebug(activeSlot.Itemstack)}");
-        Notify(byPlayer, $"Added {FormatLitres(inserted)}L sulfuric acid: {FormatLitres(liquidStack?.StackSize ?? 0)}/{LiquidCapacityLitres}L.");
+        NotifyInfo(byPlayer, $"Added {FormatLitres(inserted)}L {GetLiquidName(pourStack)} ({FormatLitres(liquidStack?.StackSize ?? 0)}/{LiquidCapacityLitres}L).");
     }
 
     private void TryTakeFromCauldron(IPlayer byPlayer, ItemSlot activeSlot)
@@ -660,13 +728,13 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (HasActiveProcess() || fuelLit)
         {
-            Notify(byPlayer, "The cauldron is busy.");
+            Notify(byPlayer, "The cauldron is already processing.");
             return;
         }
 
         if (immersedStack != null)
         {
-            Notify(byPlayer, "Take out the immersed item before draining the cauldron.");
+            Notify(byPlayer, "Remove the immersed item before draining the cauldron.");
             return;
         }
 
@@ -688,7 +756,7 @@ public class BlockEntityFACoverStation : BlockEntity
         int moved = sink.TryPutLiquid(heldStack, moveStack, litres);
         if (moved <= 0)
         {
-            Notify(byPlayer, $"That container cannot take {GetLiquidName(liquidStack)}.");
+            Notify(byPlayer, $"That container cannot hold {GetLiquidName(liquidStack)}.");
             return;
         }
 
@@ -703,7 +771,7 @@ public class BlockEntityFACoverStation : BlockEntity
         PlayStationSound(WaterPourSound, byPlayer);
         MarkStationDirty();
         DebugLiquidLog($"TryTakeFromCauldron removed={removed}, liquidStack={FormatStackDebug(liquidStack)}, heldAfter={FormatStackDebug(activeSlot.Itemstack)}");
-        Notify(byPlayer, $"Took {FormatLitres(removed)}L {GetLiquidName(moveStack)}: {FormatLitres(liquidStack?.StackSize ?? 0)}/{LiquidCapacityLitres}L.");
+        NotifyInfo(byPlayer, $"Removed {FormatLitres(removed)}L {GetLiquidName(moveStack)} ({FormatLitres(liquidStack?.StackSize ?? 0)}/{LiquidCapacityLitres}L remaining).");
     }
 
     private void TryInteractCauldronItem(IPlayer byPlayer)
@@ -726,17 +794,22 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (HasActiveProcess())
         {
-            Notify(byPlayer, GetProcessStatusText());
+            NotifyInfo(byPlayer, GetProcessStatusText());
             return;
         }
 
         if (fuelLit)
         {
-            Notify(byPlayer, "The cauldron is too hot.");
+            Notify(byPlayer, "Wait for the cauldron to cool first.");
             return;
         }
 
         if (TryStartPlateRest(byPlayer, activeSlot))
+        {
+            return;
+        }
+
+        if (TryStartArmorDissolve(byPlayer, activeSlot))
         {
             return;
         }
@@ -748,11 +821,11 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (immersedStack != null)
         {
-            Notify(byPlayer, "The cauldron already holds an item.");
+            Notify(byPlayer, "The cauldron already contains an item.");
             return;
         }
 
-        Notify(byPlayer, "Use a metal plate in sulfuric acid, or a FA armor piece in finished coating liquid.");
+        Notify(byPlayer, "Use sulfuric acid with a metal plate or coated armor, or use coating liquid with uncoated armor.");
     }
 
     private void TryTakeImmersedItem(IPlayer byPlayer)
@@ -761,13 +834,13 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (HasActiveProcess() || fuelLit)
         {
-            Notify(byPlayer, "The cauldron is too hot.");
+            Notify(byPlayer, "Wait for the cauldron to cool first.");
             return;
         }
 
         if (immersedStack == null)
         {
-            Notify(byPlayer, "There is no immersed item in the cauldron.");
+            Notify(byPlayer, "There is no item in the cauldron.");
             return;
         }
 
@@ -781,13 +854,13 @@ public class BlockEntityFACoverStation : BlockEntity
 
         MarkStationDirty();
         PlayItemSplashSound(byPlayer);
-        Notify(byPlayer, "Took the immersed item.");
+        NotifyInfo(byPlayer, $"Removed {takeStack.GetName()} from the cauldron.");
     }
 
-    private bool TryTakeSulfuricAcid(ItemSlot activeSlot, int maxItems, out ItemStack acidStack, out string failure)
+    private bool TryTakeCauldronLiquid(ItemSlot activeSlot, int maxItems, out ItemStack pourStack, out string failure)
     {
-        acidStack = null!;
-        failure = "Hold sulfuric acid over the cauldron.";
+        pourStack = null!;
+        failure = "Hold sulfuric acid or coating liquid over the cauldron.";
 
         ItemStack? heldStack = activeSlot.Itemstack;
         if (heldStack == null)
@@ -795,11 +868,16 @@ public class BlockEntityFACoverStation : BlockEntity
             return false;
         }
 
-        if (IsSulfuricAcid(heldStack))
+        if (IsCauldronLiquid(heldStack))
         {
+            if (!CanAddLiquidToCauldron(heldStack, out failure))
+            {
+                return false;
+            }
+
             int amount = Math.Min(maxItems, heldStack.StackSize);
-            acidStack = heldStack.Clone();
-            acidStack.StackSize = amount;
+            pourStack = heldStack.Clone();
+            pourStack.StackSize = amount;
             activeSlot.TakeOut(amount);
             return true;
         }
@@ -810,9 +888,14 @@ public class BlockEntityFACoverStation : BlockEntity
         }
 
         ItemStack? contentStack = liquidInterface.GetContent(heldStack);
-        if (!IsSulfuricAcid(contentStack))
+        if (!IsCauldronLiquid(contentStack))
         {
-            failure = "Only sulfuric acid can be poured into this cauldron right now.";
+            failure = "Only sulfuric acid or coating liquid can be poured into this cauldron.";
+            return false;
+        }
+
+        if (!CanAddLiquidToCauldron(contentStack!, out failure))
+        {
             return false;
         }
 
@@ -823,25 +906,42 @@ public class BlockEntityFACoverStation : BlockEntity
         }
 
         ItemStack? takenStack = source.TryTakeContent(heldStack, amountToTake);
-        if (!IsSulfuricAcid(takenStack))
+        if (!IsCauldronLiquid(takenStack))
         {
-            failure = "Could not pour sulfuric acid from that container.";
+            failure = "That liquid could not be poured from the container.";
             return false;
         }
 
-        acidStack = takenStack;
+        pourStack = takenStack;
         return true;
     }
 
-    private bool CanTakeSulfuricAcid(ItemSlot activeSlot)
+    private bool CanTakeCauldronLiquid(ItemSlot activeSlot)
     {
         ItemStack? heldStack = activeSlot.Itemstack;
-        if (IsSulfuricAcid(heldStack))
+        if (IsCauldronLiquid(heldStack))
         {
             return true;
         }
 
-        return heldStack?.Collectible is ILiquidInterface liquidInterface && IsSulfuricAcid(liquidInterface.GetContent(heldStack));
+        return heldStack?.Collectible is ILiquidInterface liquidInterface && IsCauldronLiquid(liquidInterface.GetContent(heldStack));
+    }
+
+    private bool CanAddLiquidToCauldron(ItemStack pourStack, out string failure)
+    {
+        failure = "";
+        if (liquidStack == null)
+        {
+            return true;
+        }
+
+        if (pourStack.Equals(Api.World, liquidStack, GlobalConstants.IgnoredStackAttributes))
+        {
+            return true;
+        }
+
+        failure = $"The cauldron already contains {GetLiquidName(liquidStack)}.";
+        return false;
     }
 
     private bool CanReceiveCauldronLiquid(ItemSlot activeSlot)
@@ -861,12 +961,12 @@ public class BlockEntityFACoverStation : BlockEntity
         return contentStack == null || liquidStack != null && contentStack.Equals(Api.World, liquidStack, GlobalConstants.IgnoredStackAttributes);
     }
 
-    private int InsertLiquid(ItemStack acidStack)
+    private int InsertLiquid(ItemStack pourStack)
     {
-        int amount = Math.Min(LiquidCapacityItems - (liquidStack?.StackSize ?? 0), acidStack.StackSize);
+        int amount = Math.Min(LiquidCapacityItems - (liquidStack?.StackSize ?? 0), pourStack.StackSize);
         if (liquidStack == null)
         {
-            liquidStack = acidStack.Clone();
+            liquidStack = pourStack.Clone();
             liquidStack.StackSize = amount;
             return amount;
         }
@@ -902,13 +1002,13 @@ public class BlockEntityFACoverStation : BlockEntity
 
         if (immersedStack != null)
         {
-            Notify(byPlayer, "Take out the immersed item before adding a plate.");
+            Notify(byPlayer, "Remove the immersed item before adding a plate.");
             return true;
         }
 
         if ((liquidStack?.StackSize ?? 0) < LiquidCapacityItems)
         {
-            Notify(byPlayer, $"Fill the cauldron with {LiquidCapacityLitres}L of sulfuric acid before inserting a metal plate.");
+            Notify(byPlayer, $"Fill the cauldron with {LiquidCapacityLitres}L of sulfuric acid before adding a metal plate.");
             return true;
         }
 
@@ -921,7 +1021,13 @@ public class BlockEntityFACoverStation : BlockEntity
         Item? coatingItem = Api.World.GetItem(CoatingLiquidCode(metal));
         if (coatingItem == null)
         {
-            Notify(byPlayer, $"That metal plate cannot be turned into coating liquid yet: {metal}.");
+            Notify(byPlayer, $"This metal cannot be made into coating liquid: {metal}.");
+            return true;
+        }
+
+        if (!HasAnyFAArmorCoverTexture(metal))
+        {
+            Notify(byPlayer, $"No loaded armor set supports {metal} coating.");
             return true;
         }
 
@@ -937,31 +1043,31 @@ public class BlockEntityFACoverStation : BlockEntity
         PlayBubblingSound(byPlayer);
         StartProcess(ProcessPlateResting, metal);
         MarkStationDirty();
-        Notify(byPlayer, $"Added {immersedStack.GetName()}. Let it react for {PlateRestHours:0.#} in-game hours.");
+        NotifyInfo(byPlayer, $"{immersedStack.GetName()} added. Reaction time: {PlateRestHours:0.#} in-game hours.");
         return true;
     }
 
     private bool TryInsertArmorForCoating(IPlayer byPlayer, ItemSlot activeSlot)
     {
         ItemStack? heldStack = activeSlot.Itemstack;
-        if (!TryGetFAArmorPiece(heldStack, out string piece))
+        if (!TryGetFAArmorInfo(heldStack, out FAArmorInfo armorInfo))
         {
             return false;
         }
 
         if (immersedStack != null)
         {
-            Notify(byPlayer, "The cauldron already holds an item.");
+            Notify(byPlayer, "The cauldron already contains an item.");
             return true;
         }
 
         if (!TryGetCoatingMetal(liquidStack, out string metal))
         {
-            Notify(byPlayer, "Prepare coating liquid before inserting armor.");
+            Notify(byPlayer, "Prepare coating liquid before adding armor.");
             return true;
         }
 
-        if (!CanApplyArmorCoating(heldStack, piece, metal, out string failure))
+        if (!CanApplyArmorCoating(heldStack, armorInfo, metal, out string failure))
         {
             Notify(byPlayer, failure);
             return true;
@@ -977,7 +1083,61 @@ public class BlockEntityFACoverStation : BlockEntity
         activeSlot.MarkDirty();
         PlayItemSplashSound(byPlayer);
         MarkStationDirty();
-        Notify(byPlayer, $"Immersed {immersedStack.GetName()}. Close the lid and light a full charcoal stack.");
+        NotifyInfo(byPlayer, $"{immersedStack.GetName()} added. Close the lid and light a full fuel tray.");
+        return true;
+    }
+
+    private bool TryStartArmorDissolve(IPlayer byPlayer, ItemSlot activeSlot)
+    {
+        ItemStack? heldStack = activeSlot.Itemstack;
+        if (!TryGetFAArmorInfo(heldStack, out FAArmorInfo armorInfo))
+        {
+            return false;
+        }
+
+        if (!TryGetArmorCover(heldStack, armorInfo, out string coverMetal) || coverMetal == "none")
+        {
+            return false;
+        }
+
+        if (immersedStack != null)
+        {
+            Notify(byPlayer, "The cauldron already contains an item.");
+            return true;
+        }
+
+        if ((liquidStack?.StackSize ?? 0) < LiquidCapacityItems)
+        {
+            Notify(byPlayer, $"Fill the cauldron with {LiquidCapacityLitres}L of sulfuric acid before dissolving coating.");
+            return true;
+        }
+
+        if (!IsSulfuricAcid(liquidStack))
+        {
+            Notify(byPlayer, $"The cauldron already contains {GetLiquidName(liquidStack)}.");
+            return true;
+        }
+
+        Item? coatingItem = Api.World.GetItem(CoatingLiquidCode(coverMetal));
+        if (coatingItem == null)
+        {
+            Notify(byPlayer, $"This coating cannot be recovered as liquid: {coverMetal}.");
+            return true;
+        }
+
+        ItemStack? inserted = activeSlot.TakeOut(1);
+        if (inserted == null)
+        {
+            return true;
+        }
+
+        immersedStack = inserted;
+        activeSlot.MarkDirty();
+        PlayItemSplashSound(byPlayer);
+        PlayBubblingSound(byPlayer);
+        StartProcess(ProcessArmorDissolving, coverMetal);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Coated armor added. Dissolving {coverMetal} coating takes {ArmorDissolveHours:0.#} in-game hours.");
         return true;
     }
 
@@ -996,7 +1156,20 @@ public class BlockEntityFACoverStation : BlockEntity
 
     private static bool TryGetFAArmorPiece(ItemStack? stack, out string piece)
     {
+        if (TryGetFAArmorInfo(stack, out FAArmorInfo armorInfo))
+        {
+            piece = armorInfo.Piece;
+            return true;
+        }
+
         piece = "";
+        return false;
+    }
+
+    private static bool TryGetFAArmorInfo(ItemStack? stack, out FAArmorInfo armorInfo)
+    {
+        armorInfo = null!;
+
         AssetLocation? code = stack?.Collectible?.Code;
         if (code == null || !code.Domain.StartsWith("fa", StringComparison.Ordinal))
         {
@@ -1009,56 +1182,138 @@ public class BlockEntityFACoverStation : BlockEntity
             return false;
         }
 
-        if (!string.IsNullOrEmpty(types.GetString("basehead")))
+        string path = code.Path;
+        if (TryParseFAArmorCodePath(path, out string piece, out string slotPrefix, out string style, out string baseMetal))
         {
-            piece = "head";
+            string typedBase = types.GetString("base" + piece) ?? "";
+            if (!string.IsNullOrEmpty(typedBase))
+            {
+                baseMetal = typedBase;
+            }
+
+            armorInfo = new FAArmorInfo(code.Domain, GetArmorFamily(code.Domain), piece, slotPrefix, style, baseMetal);
             return true;
         }
 
-        if (!string.IsNullOrEmpty(types.GetString("basebody")))
+        if (TryInferFAArmorPieceFromTypes(types, out piece, out baseMetal))
         {
-            piece = "body";
-            return true;
-        }
-
-        if (!string.IsNullOrEmpty(types.GetString("baselegs")))
-        {
-            piece = "legs";
+            style = types.GetString("form" + piece, "") ?? "";
+            armorInfo = new FAArmorInfo(code.Domain, GetArmorFamily(code.Domain), piece, "plate" + piece, style, baseMetal);
             return true;
         }
 
         return false;
     }
 
-    private static bool CanApplyArmorCoating(ItemStack? armorStack, string piece, string metal, out string failure)
+    private static bool TryParseFAArmorCodePath(string path, out string piece, out string slotPrefix, out string style, out string baseMetal)
     {
-        failure = "";
+        piece = "";
+        slotPrefix = "";
+        style = "";
+        baseMetal = "";
 
-        if (!SupportedArmorCoatingMetals.Contains(metal))
+        if (TryParseFAArmorCodePath(path, "platehead", "head", out piece, out slotPrefix, out style, out baseMetal)
+            || TryParseFAArmorCodePath(path, "platebody", "body", out piece, out slotPrefix, out style, out baseMetal)
+            || TryParseFAArmorCodePath(path, "platelegs", "legs", out piece, out slotPrefix, out style, out baseMetal))
         {
-            failure = $"This armor set has no ARL coating texture for {metal}.";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryParseFAArmorCodePath(string path, string expectedPrefix, string expectedPiece, out string piece, out string slotPrefix, out string style, out string baseMetal)
+    {
+        piece = "";
+        slotPrefix = "";
+        style = "";
+        baseMetal = "";
+
+        string prefix = expectedPrefix + "-";
+        if (!path.StartsWith(prefix, StringComparison.Ordinal))
+        {
             return false;
         }
+
+        string remainder = path[prefix.Length..];
+        int lastDash = remainder.LastIndexOf('-');
+        if (lastDash <= 0 || lastDash >= remainder.Length - 1)
+        {
+            return false;
+        }
+
+        piece = expectedPiece;
+        slotPrefix = expectedPrefix;
+        style = remainder[..lastDash];
+        baseMetal = remainder[(lastDash + 1)..];
+        return true;
+    }
+
+    private static bool TryInferFAArmorPieceFromTypes(ITreeAttribute types, out string piece, out string baseMetal)
+    {
+        piece = "";
+        baseMetal = "";
+
+        if (!string.IsNullOrEmpty(types.GetString("basehead")))
+        {
+            piece = "head";
+            baseMetal = types.GetString("basehead") ?? "";
+            return true;
+        }
+
+        if (!string.IsNullOrEmpty(types.GetString("basebody")))
+        {
+            piece = "body";
+            baseMetal = types.GetString("basebody") ?? "";
+            return true;
+        }
+
+        if (!string.IsNullOrEmpty(types.GetString("baselegs")))
+        {
+            piece = "legs";
+            baseMetal = types.GetString("baselegs") ?? "";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static string GetArmorFamily(string domain)
+    {
+        return domain.StartsWith("fa", StringComparison.Ordinal) && domain.Length > 2
+            ? domain[2..]
+            : domain;
+    }
+
+    private bool CanApplyArmorCoating(ItemStack? armorStack, FAArmorInfo armorInfo, string metal, out string failure)
+    {
+        failure = "";
 
         ITreeAttribute? types = armorStack?.Attributes?.GetTreeAttribute("types");
         if (types == null)
         {
-            failure = "That armor piece has no ARL type data.";
+            failure = "This armor piece cannot be coated.";
             return false;
         }
 
-        string coverKey = "cover" + piece;
+        string coverKey = "cover" + armorInfo.Piece;
         string currentCover = types.GetString(coverKey) ?? "none";
         if (!string.Equals(currentCover, "none", StringComparison.Ordinal))
         {
-            failure = $"That armor already has {currentCover} coating.";
+            failure = $"This armor already has {currentCover} coating.";
+            return false;
+        }
+
+        if (!TryResolveFAArmorPlateTexture(armorInfo, metal, out _))
+        {
+            failure = $"This armor set does not support {metal} coating.";
             return false;
         }
 
         return true;
     }
 
-    private static void ApplyArmorCoating(ItemStack armorStack, string piece, string metal)
+    private static void ApplyArmorCoating(ItemStack armorStack, FAArmorInfo armorInfo, string metal)
     {
         ITreeAttribute? types = armorStack.Attributes?.GetTreeAttribute("types");
         if (types == null)
@@ -1066,7 +1321,31 @@ public class BlockEntityFACoverStation : BlockEntity
             return;
         }
 
-        types.SetString("cover" + piece, metal);
+        types.SetString("cover" + armorInfo.Piece, metal);
+    }
+
+    private static bool TryGetArmorCover(ItemStack? armorStack, FAArmorInfo armorInfo, out string coverMetal)
+    {
+        coverMetal = "";
+        ITreeAttribute? types = armorStack?.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            return false;
+        }
+
+        coverMetal = types.GetString("cover" + armorInfo.Piece) ?? "none";
+        return !string.IsNullOrEmpty(coverMetal);
+    }
+
+    private static void RemoveArmorCoating(ItemStack armorStack, FAArmorInfo armorInfo)
+    {
+        ITreeAttribute? types = armorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            return;
+        }
+
+        types.SetString("cover" + armorInfo.Piece, "none");
     }
 
     private static AssetLocation CoatingLiquidCode(string metal)
@@ -1130,6 +1409,12 @@ public class BlockEntityFACoverStation : BlockEntity
         if (processMode == ProcessArmorCoating)
         {
             CompleteArmorCoating();
+            return;
+        }
+
+        if (processMode == ProcessArmorDissolving)
+        {
+            CompleteArmorDissolve();
         }
     }
 
@@ -1158,6 +1443,7 @@ public class BlockEntityFACoverStation : BlockEntity
         {
             ProcessPlateResting => PlateRestHours,
             ProcessArmorCoating => ArmorCoatingHours,
+            ProcessArmorDissolving => ArmorDissolveHours,
             _ => 0
         };
     }
@@ -1170,7 +1456,12 @@ public class BlockEntityFACoverStation : BlockEntity
         }
 
         double remaining = Math.Max(0, GetProcessDurationHours() - (Api.World.Calendar.TotalHours - processStartHours));
-        string label = processMode == ProcessPlateResting ? "Plate reacting" : "Armor coating";
+        string label = processMode switch
+        {
+            ProcessPlateResting => "Plate reacting",
+            ProcessArmorDissolving => "Armor coating dissolving",
+            _ => "Armor coating"
+        };
         return $"{label}: {remaining:0.#} in-game hours remaining";
     }
 
@@ -1231,8 +1522,8 @@ public class BlockEntityFACoverStation : BlockEntity
         if (immersedStack == null
             || !TryGetCoatingMetal(liquidStack, out string metal)
             || metal != processMetal
-            || !TryGetFAArmorPiece(immersedStack, out string piece)
-            || !CanApplyArmorCoating(immersedStack, piece, metal, out _))
+            || !TryGetFAArmorInfo(immersedStack, out FAArmorInfo armorInfo)
+            || !CanApplyArmorCoating(immersedStack, armorInfo, metal, out _))
         {
             fuelLit = false;
             ClearProcess();
@@ -1240,10 +1531,40 @@ public class BlockEntityFACoverStation : BlockEntity
             return;
         }
 
-        ApplyArmorCoating(immersedStack, piece, metal);
+        ApplyArmorCoating(immersedStack, armorInfo, metal);
         liquidStack = null;
         fuelStack = null;
         fuelLit = false;
+        ClearProcess();
+        MarkStationDirty();
+    }
+
+    private void CompleteArmorDissolve()
+    {
+        if (immersedStack == null
+            || !TryGetFAArmorInfo(immersedStack, out FAArmorInfo armorInfo)
+            || !TryGetArmorCover(immersedStack, armorInfo, out string coverMetal)
+            || coverMetal != processMetal
+            || coverMetal == "none"
+            || liquidStack == null
+            || !IsSulfuricAcid(liquidStack))
+        {
+            ClearProcess();
+            MarkStationDirty();
+            return;
+        }
+
+        Item? coatingItem = Api.World.GetItem(CoatingLiquidCode(coverMetal));
+        if (coatingItem == null)
+        {
+            ClearProcess();
+            MarkStationDirty();
+            return;
+        }
+
+        int liquidAmount = liquidStack.StackSize;
+        RemoveArmorCoating(immersedStack, armorInfo);
+        liquidStack = new ItemStack(coatingItem, liquidAmount);
         ClearProcess();
         MarkStationDirty();
     }
@@ -1387,6 +1708,77 @@ public class BlockEntityFACoverStation : BlockEntity
         return mesh;
     }
 
+    private MeshData? TryCreateTableItemMesh(ITesselatorAPI tessThreadTesselator)
+    {
+        try
+        {
+            return CreateTableItemMesh(tessThreadTesselator);
+        }
+        catch (Exception exception)
+        {
+            Api?.Logger.Warning("[FACore CoverStation] Could not render table item {0}: {1}", FormatStackDebug(tableStack), exception);
+            return null;
+        }
+    }
+
+    private MeshData? CreateTableItemMesh(ITesselatorAPI tessThreadTesselator)
+    {
+        if (Api is not ICoreClientAPI capi || tableStack?.Collectible == null)
+        {
+            return null;
+        }
+
+        MeshData mesh;
+        bool layFlat = ShouldRotateTableItem(tableStack);
+        if (tableStack.Item != null)
+        {
+            ITexPositionSource fallbackTextureSource = capi.Tesselator.GetTextureSource(Block, 0, false);
+            if (!TryResolveImmersedShapeAndTextures(
+                    capi,
+                    tableStack.Item,
+                    tableStack,
+                    fallbackTextureSource,
+                    out Shape? shape,
+                    out ITexPositionSource textureSource,
+                    out _
+                ))
+            {
+                return null;
+            }
+
+            tessThreadTesselator.TesselateShape(
+                "facore-coverstation-tableitem",
+                shape,
+                out mesh,
+                textureSource,
+                new Vec3f(Block.Shape.rotateX, Block.Shape.rotateY, Block.Shape.rotateZ)
+            );
+        }
+        else if (tableStack.Block != null)
+        {
+            tessThreadTesselator.TesselateBlock(tableStack.Block, out mesh);
+        }
+        else
+        {
+            return null;
+        }
+
+        if (mesh == null || mesh.VerticesCount <= 0)
+        {
+            return null;
+        }
+
+        ForceOpaqueRenderPass(mesh);
+        AlignTableItemMesh(mesh, layFlat);
+        return mesh;
+    }
+
+    private static bool ShouldRotateTableItem(ItemStack stack)
+    {
+        return TryGetFAArmorInfo(stack, out FAArmorInfo armorInfo)
+            && (armorInfo.Piece == "body" || armorInfo.Piece == "legs");
+    }
+
     private bool TryApplyForgeFuelTexture(Shape shape, bool lit, out string textureDebug)
     {
         textureDebug = "missing-forge-texture";
@@ -1485,7 +1877,7 @@ public class BlockEntityFACoverStation : BlockEntity
             DebugLiquidLog($"TryResolveImmersedShapeAndTextures item shape not found stack={FormatStackDebug(stack)}, shape={shapeLocation}");
         }
 
-        if (!TryResolveGreenwichArmorPreview(capi, stack, fallbackTextureSource, out shape, out textureSource, out shapeLocation))
+        if (!TryResolveFAArmorPreview(capi, stack, fallbackTextureSource, out shape, out textureSource, out shapeLocation))
         {
             return false;
         }
@@ -1493,7 +1885,7 @@ public class BlockEntityFACoverStation : BlockEntity
         return true;
     }
 
-    private bool TryResolveGreenwichArmorPreview(
+    private bool TryResolveFAArmorPreview(
         ICoreClientAPI capi,
         ItemStack stack,
         ITexPositionSource fallbackTextureSource,
@@ -1506,7 +1898,7 @@ public class BlockEntityFACoverStation : BlockEntity
         textureSource = fallbackTextureSource;
         shapeLocation = null!;
 
-        if (stack.Collectible?.Code?.Domain != "fagreenwich" || !TryGetFAArmorPiece(stack, out string piece))
+        if (!TryGetFAArmorInfo(stack, out FAArmorInfo armorInfo))
         {
             return false;
         }
@@ -1517,46 +1909,184 @@ public class BlockEntityFACoverStation : BlockEntity
             return false;
         }
 
-        string form = types.GetString("form" + piece, GetDefaultGreenwichForm(piece));
+        string piece = armorInfo.Piece;
         string decoration = types.GetString("decoration" + piece, "none");
-        string baseMetal = types.GetString("base" + piece, "iron");
         string coverMetal = types.GetString("cover" + piece, "none");
         string stripMetal = types.GetString("strip" + piece, "none");
         string color = types.GetString("color" + piece, "none");
 
-        shapeLocation = new AssetLocation("fagreenwich", $"shapes/entity/armor/greenwich/{form}/{decoration}{piece}.json");
-        shape = Shape.TryGet(Api, shapeLocation);
-        if (shape == null)
+        if (!TryResolveFAArmorShape(armorInfo, decoration, types.GetString("form" + piece, "") ?? "", out shape, out shapeLocation))
         {
-            DebugLiquidLog($"TryResolveGreenwichArmorPreview shape not found stack={FormatStackDebug(stack)}, shape={shapeLocation}");
+            DebugLiquidLog($"TryResolveFAArmorPreview shape not found stack={FormatStackDebug(stack)}, family={armorInfo.Family}, piece={piece}, style={armorInfo.Style}, decoration={decoration}");
+            return false;
+        }
+
+        if (!TryResolveFAArmorPlateTexture(armorInfo, coverMetal, out AssetLocation plateTexture))
+        {
+            DebugLiquidLog($"TryResolveFAArmorPreview plate texture not found stack={FormatStackDebug(stack)}, family={armorInfo.Family}, piece={piece}, base={armorInfo.BaseMetal}, cover={coverMetal}");
             return false;
         }
 
         var textures = new Dictionary<string, CompositeTexture>(StringComparer.Ordinal);
-        string baseTextureMetal = coverMetal == "none" ? baseMetal : coverMetal;
-        string baseTextureKind = coverMetal == "none" ? "base" : "cover";
-        textures["base" + piece] = new CompositeTexture(new AssetLocation("fagreenwich", $"armor/entity/greenwich/{baseTextureKind}/{baseTextureMetal}")) { Alpha = 255 };
+        textures["base" + piece] = new CompositeTexture(plateTexture) { Alpha = 255 };
         textures["strip" + piece] = new CompositeTexture(new AssetLocation("facore", $"armor/entity/trim/{stripMetal}")) { Alpha = 255 };
-        textures["color" + piece] = GetGreenwichDecorationTexture(piece, decoration, color);
+        textures["color" + piece] = GetFAArmorDecorationTexture(piece, decoration, color);
         textures["seraph"] = new CompositeTexture(new AssetLocation("game", "block/transparent")) { Alpha = 0 };
 
         textureSource = new CompositeBlockAtlasTextureSource(capi, fallbackTextureSource, textures);
-        DebugLiquidLog($"TryResolveGreenwichArmorPreview stack={FormatStackDebug(stack)}, piece={piece}, shape={shapeLocation}, base={baseTextureKind}/{baseTextureMetal}, strip={stripMetal}, decoration={decoration}, color={color}");
+        DebugLiquidLog($"TryResolveFAArmorPreview stack={FormatStackDebug(stack)}, piece={piece}, shape={shapeLocation}, plate={plateTexture}, strip={stripMetal}, decoration={decoration}, color={color}");
         return true;
     }
 
-    private static string GetDefaultGreenwichForm(string piece)
+    private bool TryResolveFAArmorShape(FAArmorInfo armorInfo, string decoration, string form, out Shape? shape, out AssetLocation shapeLocation)
     {
-        return piece switch
+        shape = null;
+        shapeLocation = null!;
+
+        var candidates = new List<AssetLocation>();
+        AddShapeCandidate(candidates, armorInfo.Domain, armorInfo.Family, form, decoration, armorInfo.Piece);
+        AddShapeCandidate(candidates, armorInfo.Domain, armorInfo.Family, $"{armorInfo.SlotPrefix}/{armorInfo.Style}", decoration, armorInfo.Piece);
+        AddShapeCandidate(candidates, armorInfo.Domain, armorInfo.Family, armorInfo.SlotPrefix, decoration, armorInfo.Piece);
+        AddShapeCandidate(candidates, armorInfo.Domain, armorInfo.Family, armorInfo.Style, decoration, armorInfo.Piece);
+
+        foreach (AssetLocation candidate in candidates)
         {
-            "head" => "armet",
-            "body" => "guardbody",
-            "legs" => "guardlegs",
-            _ => ""
-        };
+            shape = Shape.TryGet(Api, candidate);
+            if (shape != null)
+            {
+                shapeLocation = candidate;
+                return true;
+            }
+        }
+
+        shapeLocation = candidates.Count > 0 ? candidates[0] : new AssetLocation(armorInfo.Domain, "shapes/entity/armor");
+        return false;
     }
 
-    private static CompositeTexture GetGreenwichDecorationTexture(string piece, string decoration, string color)
+    private static void AddShapeCandidate(List<AssetLocation> candidates, string domain, string family, string folder, string decoration, string piece)
+    {
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return;
+        }
+
+        string normalizedFolder = folder.Replace('\\', '/').Trim('/');
+        if (normalizedFolder.Length == 0)
+        {
+            return;
+        }
+
+        AddUniqueAssetLocation(candidates, new AssetLocation(domain, $"shapes/entity/armor/{family}/{normalizedFolder}/{decoration}{piece}.json"));
+    }
+
+    private bool TryResolveFAArmorPlateTexture(FAArmorInfo armorInfo, string coverMetal, out AssetLocation textureBase)
+    {
+        textureBase = null!;
+
+        var candidates = new List<AssetLocation>();
+        if (string.Equals(coverMetal, "none", StringComparison.Ordinal))
+        {
+            AddBaseTextureCandidates(candidates, armorInfo);
+        }
+        else
+        {
+            AddCoverTextureCandidates(candidates, armorInfo, coverMetal);
+        }
+
+        foreach (AssetLocation candidate in candidates)
+        {
+            if (TextureAssetExists(candidate))
+            {
+                textureBase = candidate;
+                return true;
+            }
+        }
+
+        textureBase = candidates.Count > 0 ? candidates[0] : new AssetLocation(armorInfo.Domain, $"armor/entity/{armorInfo.Family}");
+        return false;
+    }
+
+    private static void AddBaseTextureCandidates(List<AssetLocation> candidates, FAArmorInfo armorInfo)
+    {
+        string textureKind = armorInfo.TextureKind;
+
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/base/{textureKind}/{armorInfo.Style}/{armorInfo.BaseMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/base/{textureKind}/noble/{armorInfo.BaseMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/base/{textureKind}/{armorInfo.BaseMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/base/{armorInfo.BaseMetal}");
+    }
+
+    private static void AddCoverTextureCandidates(List<AssetLocation> candidates, FAArmorInfo armorInfo, string coverMetal)
+    {
+        string textureKind = armorInfo.TextureKind;
+
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/cover/{armorInfo.BaseMetal}/{textureKind}/{armorInfo.Style}/{coverMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/cover/{armorInfo.BaseMetal}/{textureKind}/noble/{coverMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/cover/{armorInfo.BaseMetal}/{textureKind}/{coverMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/cover/{armorInfo.BaseMetal}/{coverMetal}");
+        AddTextureCandidate(candidates, armorInfo.Domain, $"armor/entity/{armorInfo.Family}/cover/{coverMetal}");
+    }
+
+    private static void AddTextureCandidate(List<AssetLocation> candidates, string domain, string path)
+    {
+        string normalizedPath = path.Replace('\\', '/').Replace("//", "/").Trim('/');
+        if (normalizedPath.Contains("//", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        AddUniqueAssetLocation(candidates, new AssetLocation(domain, normalizedPath));
+    }
+
+    private bool TextureAssetExists(AssetLocation textureBase)
+    {
+        return Api?.Assets.TryGet(new AssetLocation(textureBase.Domain, $"textures/{textureBase.Path}.png")) != null;
+    }
+
+    private bool HasAnyFAArmorCoverTexture(string coverMetal)
+    {
+        if (string.Equals(coverMetal, "none", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        foreach (Item item in Api.World.Items)
+        {
+            AssetLocation? code = item?.Code;
+            if (code == null || !code.Domain.StartsWith("fa", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!TryParseFAArmorCodePath(code.Path, out string piece, out string slotPrefix, out string style, out string baseMetal))
+            {
+                continue;
+            }
+
+            var armorInfo = new FAArmorInfo(code.Domain, GetArmorFamily(code.Domain), piece, slotPrefix, style, baseMetal);
+            if (TryResolveFAArmorPlateTexture(armorInfo, coverMetal, out _))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void AddUniqueAssetLocation(List<AssetLocation> candidates, AssetLocation candidate)
+    {
+        foreach (AssetLocation existing in candidates)
+        {
+            if (existing.Equals(candidate))
+            {
+                return;
+            }
+        }
+
+        candidates.Add(candidate);
+    }
+
+    private static CompositeTexture GetFAArmorDecorationTexture(string piece, string decoration, string color)
     {
         if (decoration == "bear")
         {
@@ -1564,6 +2094,42 @@ public class BlockEntityFACoverStation : BlockEntity
         }
 
         return new CompositeTexture(new AssetLocation("facore", $"block/decorations/{piece}/{color}")) { Alpha = 255 };
+    }
+
+    private void AlignTableItemMesh(MeshData mesh, bool layFlat)
+    {
+        if (!TryGetMeshBounds(mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ))
+        {
+            return;
+        }
+
+        var meshOrigin = new Vec3f((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
+        float maxDimension = Math.Max(Math.Max(maxX - minX, maxY - minY), maxZ - minZ);
+        if (maxDimension > 0)
+        {
+            float scale = TableItemMaxDimension / maxDimension;
+            mesh.Scale(meshOrigin, scale, scale, scale);
+        }
+
+        if (layFlat)
+        {
+            mesh.Rotate(meshOrigin, GameMath.PIHALF, 0f, GameMath.PI * 0.08f);
+        }
+
+        if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out _, out maxZ))
+        {
+            return;
+        }
+
+        (float targetCenterX, float targetCenterZ) = GetTableTargetCenter();
+        float currentCenterX = (minX + maxX) * 0.5f;
+        float currentCenterZ = (minZ + maxZ) * 0.5f;
+
+        mesh.Translate(
+            targetCenterX - currentCenterX,
+            TableTopY - minY,
+            targetCenterZ - currentCenterZ
+        );
     }
 
     private void AlignImmersedItemMesh(MeshData mesh, bool isPlate, bool hasVisibleLiquid)
@@ -1625,6 +2191,22 @@ public class BlockEntityFACoverStation : BlockEntity
     {
         float northCenterX = (FuelMinX + FuelMaxX) * 0.5f;
         float northCenterZ = (FuelMinZ + FuelMaxZ) * 0.5f;
+        float offsetX = northCenterX - 0.5f;
+        float offsetZ = northCenterZ - 0.5f;
+
+        return GetStationSideCode() switch
+        {
+            "east" => (0.5f - offsetZ, 0.5f + offsetX),
+            "south" => (0.5f - offsetX, 0.5f - offsetZ),
+            "west" => (0.5f + offsetZ, 0.5f - offsetX),
+            _ => (northCenterX, northCenterZ)
+        };
+    }
+
+    private (float X, float Z) GetTableTargetCenter()
+    {
+        float northCenterX = (TableMinX + TableMaxX) * 0.5f;
+        float northCenterZ = (TableMinZ + TableMaxZ) * 0.5f;
         float offsetX = northCenterX - 0.5f;
         float offsetZ = northCenterZ - 0.5f;
 
@@ -2335,12 +2917,16 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         return value == null ? "null" : $"{value.GetType().FullName}={value}";
     }
 
-    private static void Notify(IPlayer player, string text)
+    private void Notify(IPlayer player, string text)
     {
         if (player is IServerPlayer serverPlayer)
         {
-            serverPlayer.SendMessage(GlobalConstants.CurrentChatGroup, text, EnumChatType.Notification);
+            serverPlayer.SendIngameError("facore-coverstation", text);
         }
+    }
+
+    private void NotifyInfo(IPlayer player, string text)
+    {
     }
 
     private void DebugLiquidLog(string message)
@@ -2370,6 +2956,27 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
     private static string FormatStackDebug(ItemStack? stack)
     {
         return stack == null ? "null" : $"{stack.StackSize}x {stack.Collectible?.Code}";
+    }
+
+    private sealed class FAArmorInfo
+    {
+        public FAArmorInfo(string domain, string family, string piece, string slotPrefix, string style, string baseMetal)
+        {
+            Domain = domain;
+            Family = family;
+            Piece = piece;
+            SlotPrefix = slotPrefix;
+            Style = style;
+            BaseMetal = baseMetal;
+        }
+
+        public string Domain { get; }
+        public string Family { get; }
+        public string Piece { get; }
+        public string SlotPrefix { get; }
+        public string Style { get; }
+        public string BaseMetal { get; }
+        public string TextureKind => SlotPrefix.StartsWith("plate", StringComparison.Ordinal) ? "plate" : SlotPrefix;
     }
 
     private sealed class MappedTextureSource : ITexPositionSource

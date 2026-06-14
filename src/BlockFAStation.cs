@@ -12,7 +12,7 @@ namespace FACore;
 
 public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 {
-    private const double TableStorageHitNudge = 0.08;
+    private const float FuelIgnitionSeconds = 2f;
     private Cuboidf[]? selectionBoxes;
     private List<StationElementZone> elementZones = [];
     private List<StationElementZone> selectableZones = [];
@@ -286,8 +286,21 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
         if (zone.ActionName == "TableStorage")
         {
-            NudgeTableStorageHitPosition(blockSel);
-            return false;
+            if (world.Side == EnumAppSide.Client)
+            {
+                return true;
+            }
+
+            BlockPos tableMainPos = GetMainPos(blockSel.Position);
+            BlockEntityFACoverStation? tableBe = GetOrCreateStationController(world, tableMainPos);
+            if (tableBe == null)
+            {
+                Notify(byPlayer, "The cover station is not ready yet.");
+                return true;
+            }
+
+            tableBe.HandleElementInteraction(byPlayer, zone.ActionName);
+            return true;
         }
 
         if (world.Side == EnumAppSide.Client)
@@ -306,7 +319,12 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         BlockEntityFACoverStation? be = GetOrCreateStationController(world, mainPos);
         if (be == null)
         {
-            Notify(byPlayer, "Station controller is not ready yet.");
+            Notify(byPlayer, "The cover station is not ready yet.");
+            return true;
+        }
+
+        if (zone.ActionName == "Fuel" && be.IsHoldingIgniter(byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack) && be.CanStartFuelIgnition(byPlayer))
+        {
             return true;
         }
 
@@ -320,6 +338,48 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         );
         be.HandleElementInteraction(byPlayer, zone.ActionName);
         return true;
+    }
+
+    public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+    {
+        if (!IsCoverStation())
+        {
+            return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
+        }
+
+        return secondsUsed < FuelIgnitionSeconds
+            && TryGetFuelIgnitionTarget(world, byPlayer, blockSel, GetPartOffset(), GetMainPos(blockSel.Position), out BlockEntityFACoverStation? be)
+            && be.CanStartFuelIgnition(byPlayer);
+    }
+
+    public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+    {
+        if (!IsCoverStation())
+        {
+            base.OnBlockInteractStop(secondsUsed, world, byPlayer, blockSel);
+            return;
+        }
+
+        if (secondsUsed < FuelIgnitionSeconds || world.Side != EnumAppSide.Server)
+        {
+            return;
+        }
+
+        if (TryGetFuelIgnitionTarget(world, byPlayer, blockSel, GetPartOffset(), GetMainPos(blockSel.Position), out BlockEntityFACoverStation? be))
+        {
+            be.CompleteFuelIgnition(byPlayer);
+        }
+    }
+
+    public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
+    {
+        if (!IsCoverStation())
+        {
+            return base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
+        }
+
+        return TryGetFuelIgnitionTarget(world, byPlayer, blockSel, GetPartOffset(), GetMainPos(blockSel.Position), out _)
+            || base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
     }
 
     public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
@@ -399,8 +459,21 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
         if (zone.ActionName == "TableStorage")
         {
-            NudgeTableStorageHitPosition(blockSel);
-            return false;
+            if (world.Side == EnumAppSide.Client)
+            {
+                return true;
+            }
+
+            BlockPos tableMainPos = blockSel.Position.AddCopy(offset);
+            BlockEntityFACoverStation? tableBe = GetOrCreateStationController(world, tableMainPos);
+            if (tableBe == null)
+            {
+                Notify(byPlayer, "The cover station is not ready yet.");
+                return true;
+            }
+
+            tableBe.HandleElementInteraction(byPlayer, zone.ActionName);
+            return true;
         }
 
         if (world.Side == EnumAppSide.Client)
@@ -423,7 +496,12 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         BlockEntityFACoverStation? be = GetOrCreateStationController(world, mainPos);
         if (be == null)
         {
-            Notify(byPlayer, "Station controller is not ready yet.");
+            Notify(byPlayer, "The cover station is not ready yet.");
+            return true;
+        }
+
+        if (zone.ActionName == "Fuel" && be.IsHoldingIgniter(byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack) && be.CanStartFuelIgnition(byPlayer))
+        {
             return true;
         }
 
@@ -444,16 +522,27 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public bool MBOnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, Vec3i offset)
     {
-        return false;
+        return secondsUsed < FuelIgnitionSeconds
+            && TryGetFuelIgnitionTarget(world, byPlayer, blockSel, ToPartOffset(offset), blockSel.Position.AddCopy(offset), out BlockEntityFACoverStation? be)
+            && be.CanStartFuelIgnition(byPlayer);
     }
 
     public void MBOnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, Vec3i offset)
     {
+        if (secondsUsed < FuelIgnitionSeconds || world.Side != EnumAppSide.Server)
+        {
+            return;
+        }
+
+        if (TryGetFuelIgnitionTarget(world, byPlayer, blockSel, ToPartOffset(offset), blockSel.Position.AddCopy(offset), out BlockEntityFACoverStation? be))
+        {
+            be.CompleteFuelIgnition(byPlayer);
+        }
     }
 
     public bool MBOnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason, Vec3i offset)
     {
-        return false;
+        return TryGetFuelIgnitionTarget(world, byPlayer, blockSel, ToPartOffset(offset), blockSel.Position.AddCopy(offset), out _);
     }
 
     public ItemStack MBOnPickBlock(IWorldAccessor world, BlockPos pos, Vec3i offset)
@@ -515,27 +604,41 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         return bestZone;
     }
 
-    private void NudgeTableStorageHitPosition(BlockSelection selection)
+    private bool TryGetFuelIgnitionTarget(
+        IWorldAccessor world,
+        IPlayer byPlayer,
+        BlockSelection blockSel,
+        Vec3i partOffset,
+        BlockPos controllerPos,
+        out BlockEntityFACoverStation be
+    )
     {
-        if (selection.HitPosition == null)
+        be = null!;
+        BlockEntityFACoverStation? stationBe = GetStationController(world.BlockAccessor, controllerPos);
+        if (stationBe == null)
         {
-            return;
+            return false;
         }
 
-        Vec3d right = GetTableRightVector(GetSide());
-        selection.HitPosition.X = GameMath.Clamp(selection.HitPosition.X + right.X * TableStorageHitNudge, 0.001, 0.999);
-        selection.HitPosition.Z = GameMath.Clamp(selection.HitPosition.Z + right.Z * TableStorageHitNudge, 0.001, 0.999);
-    }
-
-    private static Vec3d GetTableRightVector(BlockFacing side)
-    {
-        return side.Code switch
+        StationElementZone? zone = GetZoneFromSelection(
+            blockSel,
+            partOffset,
+            BuildSelectableZones(elementZones, partOffset, stationBe),
+            stationBe
+        );
+        if (zone?.ActionName != "Fuel")
         {
-            "east" => new Vec3d(0, 0, -1),
-            "south" => new Vec3d(1, 0, 0),
-            "west" => new Vec3d(0, 0, 1),
-            _ => new Vec3d(-1, 0, 0)
-        };
+            return false;
+        }
+
+        ItemStack? heldStack = byPlayer.InventoryManager?.ActiveHotbarSlot?.Itemstack;
+        if (!stationBe.IsHoldingIgniter(heldStack))
+        {
+            return false;
+        }
+
+        be = stationBe;
+        return true;
     }
 
     private bool IsCoverStation()
@@ -855,9 +958,19 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             "FuelDoor" => be?.FuelOpen == true ? "Close fuel door" : "Open fuel door",
             "Fuel" => GetFuelInteractionText(be, heldStack),
             "LiquidPour" => GetLiquidInteractionText(be, heldStack),
-            "TableStorage" => heldStack == null ? "Table top" : "Place item",
+            "TableStorage" => GetTableInteractionText(be, heldStack),
             _ => "Use"
         };
+    }
+
+    private static string GetTableInteractionText(BlockEntityFACoverStation? be, ItemStack? heldStack)
+    {
+        if (be?.HasTableItem == true)
+        {
+            return heldStack == null ? "Take item" : "Table occupied";
+        }
+
+        return heldStack == null ? "Table top" : "Place item";
     }
 
     private static string GetFuelInteractionText(BlockEntityFACoverStation? be, ItemStack? heldStack)
@@ -932,7 +1045,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     {
         if (player is IServerPlayer serverPlayer)
         {
-            serverPlayer.SendMessage(GlobalConstants.CurrentChatGroup, text, EnumChatType.Notification);
+            serverPlayer.SendIngameError("facore-coverstation", text);
         }
     }
 }

@@ -20,6 +20,8 @@ public class FACoreModSystem : ModSystem
     private static readonly HashSet<string> GreenwichCovers = new(StringComparer.Ordinal)
     {
         "none",
+        "bismuth",
+        "bismuthbronze",
         "copper",
         "cupronickel",
         "brass",
@@ -27,10 +29,10 @@ public class FACoreModSystem : ModSystem
         "blackbronze",
         "lead",
         "silver",
+        "tinbronze",
         "meteoriciron",
         "gold",
         "electrum",
-        "bismuth",
         "uranium"
     };
 
@@ -52,7 +54,15 @@ public class FACoreModSystem : ModSystem
                     api.ChatCommands.Parsers.Word("piece"),
                     api.ChatCommands.Parsers.Word("metal"),
                     api.ChatCommands.Parsers.OptionalWord("cover"))
-                .HandleWith(args => OnGreenwichCommand(api, args))
+                .HandleWith(args => OnArmorCommand(api, args, "fagreenwich", "Greenwich"))
+            .EndSubCommand()
+            .BeginSubCommand("gothic")
+                .WithDescription("Spawn Gothic armor: /fac gothic <head|body|legs|all> <iron|meteoriciron|steel> [cover]")
+                .WithArgs(
+                    api.ChatCommands.Parsers.Word("piece"),
+                    api.ChatCommands.Parsers.Word("metal"),
+                    api.ChatCommands.Parsers.OptionalWord("cover"))
+                .HandleWith(args => OnArmorCommand(api, args, "fagothic", "Gothic"))
             .EndSubCommand();
     }
 
@@ -73,7 +83,7 @@ public class FACoreModSystem : ModSystem
         }
     }
 
-    private static TextCommandResult OnGreenwichCommand(ICoreServerAPI api, TextCommandCallingArgs args)
+    private static TextCommandResult OnArmorCommand(ICoreServerAPI api, TextCommandCallingArgs args, string domain, string familyName)
     {
         if (args.Caller.Player is not IServerPlayer player)
         {
@@ -105,7 +115,7 @@ public class FACoreModSystem : ModSystem
 
         foreach (string piece in pieces)
         {
-            ItemStack? stack = CreateGreenwichStack(api, piece, metal, cover);
+            ItemStack? stack = CreateFAArmorStack(api, domain, piece, metal, cover);
             if (stack == null)
             {
                 missing.Add(piece);
@@ -118,10 +128,10 @@ public class FACoreModSystem : ModSystem
 
         if (given.Count == 0)
         {
-            return TextCommandResult.Error("No Greenwich armor items are registered. Is FA-Greenwich loaded/enabled?");
+            return TextCommandResult.Error($"No {familyName} armor items are registered. Is {domain} loaded/enabled?");
         }
 
-        string message = $"Spawned Greenwich {string.Join(", ", given)} with base={metal}, cover={cover}.";
+        string message = $"Spawned {familyName} {string.Join(", ", given)} with base={metal}, cover={cover}.";
         if (missing.Count > 0)
         {
             message += " Missing item(s): " + string.Join(", ", missing) + ".";
@@ -193,9 +203,9 @@ public class FACoreModSystem : ModSystem
         return new string(buffer[..length]);
     }
 
-    private static ItemStack? CreateGreenwichStack(ICoreServerAPI api, string piece, string metal, string cover)
+    private static ItemStack? CreateFAArmorStack(ICoreServerAPI api, string domain, string piece, string metal, string cover)
     {
-        Item? item = api.World.GetItem(new AssetLocation("fagreenwich", piece));
+        Item? item = FindFAArmorItem(api, domain, piece, metal);
         if (item == null)
         {
             return null;
@@ -236,6 +246,36 @@ public class FACoreModSystem : ModSystem
 
         stack.Attributes["types"] = types;
         return stack;
+    }
+
+    private static Item? FindFAArmorItem(ICoreServerAPI api, string domain, string piece, string metal)
+    {
+        string prefix = piece switch
+        {
+            "head" => "platehead-",
+            "body" => "platebody-",
+            "legs" => "platelegs-",
+            _ => ""
+        };
+
+        if (prefix.Length == 0)
+        {
+            return null;
+        }
+
+        string suffix = "-" + metal;
+        foreach (Item item in api.World.Items)
+        {
+            AssetLocation? code = item?.Code;
+            if (code?.Domain == domain
+                && code.Path.StartsWith(prefix, StringComparison.Ordinal)
+                && code.Path.EndsWith(suffix, StringComparison.Ordinal))
+            {
+                return item;
+            }
+        }
+
+        return null;
     }
 
     private static void GiveOrDrop(IServerPlayer player, ItemStack stack)
