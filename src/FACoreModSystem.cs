@@ -10,6 +10,9 @@ namespace FACore;
 
 public class FACoreModSystem : ModSystem
 {
+    private const float StationCollisionHeight = 1.5f;
+    private const float StationSelectionEnvelopeHeight = 2.5f;
+
     private static readonly HashSet<string> GreenwichBaseMetals = new(StringComparer.Ordinal)
     {
         "iron",
@@ -72,15 +75,21 @@ public class FACoreModSystem : ModSystem
 
         foreach (Block block in api.World.Blocks)
         {
-            if (block.Code?.Domain != "facore" || !block.Code.Path.StartsWith("fa-workstation-cover-"))
+            if (!IsWorkstationBlock(block))
             {
                 continue;
             }
 
-            block.SelectionBoxes = [new Cuboidf(0f, 0f, 0f, 1f, 1.5f, 1f)];
-            block.CollisionBoxes = [new Cuboidf(0f, 0f, 0f, 1f, 1.5f, 1f)];
+            block.SelectionBoxes = [new Cuboidf(0f, 0f, 0f, 1f, StationSelectionEnvelopeHeight, 1f)];
+            block.CollisionBoxes = [new Cuboidf(0f, 0f, 0f, 1f, StationCollisionHeight, 1f)];
             block.ParticleCollisionBoxes = block.CollisionBoxes;
         }
+    }
+
+    private static bool IsWorkstationBlock(Block block)
+    {
+        return block.Code?.Domain == "facore"
+            && block.Code.Path.StartsWith("fa-workstation-", StringComparison.Ordinal);
     }
 
     private static TextCommandResult OnArmorCommand(ICoreServerAPI api, TextCommandCallingArgs args, string domain, string familyName)

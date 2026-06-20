@@ -13,6 +13,9 @@ namespace FACore;
 public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 {
     private const float FuelIgnitionSeconds = 2f;
+    private const float StationCollisionHeight = 1.5f;
+    private const float StationSelectionEnvelopeHeight = 2.5f;
+    private const int StationProxyRows = 3;
     private Cuboidf[]? selectionBoxes;
     private List<StationElementZone> elementZones = [];
     private List<StationElementZone> selectableZones = [];
@@ -21,19 +24,21 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     {
         base.OnLoaded(api);
 
-        if (!IsCoverStation()) return;
+        if (!UsesModelDrivenStation()) return;
 
         SideSolid[BlockFacing.UP.Index] = true;
 
         Vec3i partOffset = GetPartOffset();
         elementZones = StationShapeElementReader.LoadElementZones(api, this);
-        selectableZones = BuildSelectableZones(elementZones, partOffset, null);
+        bool includeAllSelectionOwners = IncludeAllSelectionOwners(partOffset);
+        selectableZones = BuildSelectableZones(elementZones, partOffset, null, includeAllSelectionOwners);
         selectionBoxes = BuildSelectionBoxes(selectableZones, partOffset);
         api.Logger.Notification(
-            "[FACore Station] {0}: purpose={1}, legacyParts={2}, elementZones={3}, selectableZones={4}, selectionBoxes={5}",
+            "[FACore Station] {0}: purpose={1}, legacyParts={2}, includeAllSelectionOwners={3}, elementZones={4}, selectableZones={5}, selectionBoxes={6}",
             Code,
             GetPurpose(),
             UsesLegacyParts(),
+            includeAllSelectionOwners,
             elementZones.Count,
             selectableZones.Count,
             selectionBoxes?.Length ?? 0
@@ -42,7 +47,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
     {
-        if (!IsCoverStation())
+        if (!UsesModelDrivenStation())
         {
             return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
         }
@@ -56,9 +61,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
                 return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
             }
 
-            BlockPos multiblockProxyPos = blockSel.Position.AddCopy(GetProxyOffset(placementSide.Code));
-            Block proxyBlock = world.BlockAccessor.GetBlock(multiblockProxyPos);
-            if (!proxyBlock.IsReplacableBy(placeBlock) && proxyBlock is not BlockMultiblock)
+            if (!CanPlaceStationProxies(world, placeBlock, blockSel.Position, placementSide, out _))
             {
                 failureCode = "notenoughspace";
                 return false;
@@ -76,9 +79,9 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             }
 
             placeBlock.DoPlaceBlock(world, byPlayer, blockSel, itemstack);
-            EnsureStationProxy(world, blockSel.Position, placementSide);
+            EnsureStationProxies(world, blockSel.Position, placementSide);
             placeStation.EnsureStationController(world, blockSel.Position);
-            RefreshPlacedStation(world, blockSel.Position, multiblockProxyPos);
+            RefreshPlacedStation(world, blockSel.Position, placementSide);
             return true;
         }
 
@@ -115,15 +118,11 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
     {
-        if (!IsCoverStation() || !UsesLegacyParts())
+        if (!UsesModelDrivenStation() || !UsesLegacyParts())
         {
-            if (IsCoverStation() && !UsesLegacyParts())
+            if (UsesModelDrivenStation() && !UsesLegacyParts())
             {
-                BlockPos proxyPos = pos.AddCopy(GetProxyOffset(GetSide().Code));
-                if (world.BlockAccessor.GetBlock(proxyPos) is BlockMultiblock)
-                {
-                    world.BlockAccessor.SetBlock(0, proxyPos);
-                }
+                RemoveStationProxies(world, pos, GetSide());
             }
 
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
@@ -138,7 +137,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         }
 
         BlockPos otherPos = GetOtherPartPos(pos);
-        if (world.BlockAccessor.GetBlock(otherPos) is BlockFAStation otherStation && otherStation.IsCoverStation() && otherStation.GetPart() != GetPart())
+        if (world.BlockAccessor.GetBlock(otherPos) is BlockFAStation otherStation && otherStation.UsesModelDrivenStation() && otherStation.GetPart() != GetPart())
         {
             world.BlockAccessor.SetBlock(0, otherPos);
         }
@@ -148,20 +147,16 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos)
     {
-        if (IsCoverStation() && !UsesLegacyParts())
+        if (UsesModelDrivenStation() && !UsesLegacyParts())
         {
-            BlockPos proxyPos = pos.AddCopy(GetProxyOffset(GetSide().Code));
-            if (world.BlockAccessor.GetBlock(proxyPos) is BlockMultiblock)
-            {
-                world.BlockAccessor.SetBlock(0, proxyPos);
-            }
+            RemoveStationProxies(world, pos, GetSide());
         }
 
-        if (IsCoverStation() && UsesLegacyParts())
+        if (UsesModelDrivenStation() && UsesLegacyParts())
         {
             BlockPos otherPos = GetOtherPartPos(pos);
             Block otherBlock = world.BlockAccessor.GetBlock(otherPos);
-            if (otherBlock is BlockFAStation otherStation && otherStation.IsCoverStation() && otherStation.GetPart() != GetPart())
+            if (otherBlock is BlockFAStation otherStation && otherStation.UsesModelDrivenStation() && otherStation.GetPart() != GetPart())
             {
                 world.BlockAccessor.SetBlock(0, otherPos);
             }
@@ -174,20 +169,29 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     {
         base.OnBlockPlaced(world, blockPos, byItemStack);
 
-        if (!IsCoverStation() || UsesLegacyParts())
+        if (!UsesModelDrivenStation() || UsesLegacyParts())
         {
             return;
         }
 
-        BlockPos proxyPos = blockPos.AddCopy(GetProxyOffset(GetSide().Code));
-        EnsureStationProxy(world, blockPos, GetSide());
+        EnsureStationProxies(world, blockPos, GetSide());
         EnsureStationController(world, blockPos);
-        RefreshPlacedStation(world, blockPos, proxyPos);
+        RefreshPlacedStation(world, blockPos, GetSide());
+    }
+
+    public void EnsureStationStructure(IWorldAccessor world, BlockPos blockPos)
+    {
+        if (!UsesModelDrivenStation() || UsesLegacyParts())
+        {
+            return;
+        }
+
+        EnsureStationProxies(world, blockPos, GetSide());
     }
 
     public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
     {
-        if (!IsCoverStation())
+        if (!UsesModelDrivenStation())
         {
             return base.GetDrops(world, pos, byPlayer, dropQuantityMultiplier);
         }
@@ -207,19 +211,19 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public override ItemStack OnPickBlock(IWorldAccessor world, BlockPos pos)
     {
-        if (IsCoverStation() && !UsesLegacyParts())
+        if (UsesModelDrivenStation() && !UsesLegacyParts())
         {
             return base.OnPickBlock(world, pos);
         }
 
-        return IsCoverStation()
+        return UsesModelDrivenStation()
             ? new ItemStack(world.BlockAccessor.GetBlock(CodeWithParts("main", "north")), 1)
             : base.OnPickBlock(world, pos);
     }
 
     public override AssetLocation GetRotatedBlockCode(int angle)
     {
-        if (!IsCoverStation())
+        if (!UsesModelDrivenStation())
         {
             return base.GetRotatedBlockCode(angle);
         }
@@ -233,55 +237,75 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
     {
-        return IsCoverStation() || base.DoPartialSelection(world, pos);
+        return UsesModelDrivenStation() || base.DoPartialSelection(world, pos);
     }
 
     public override Cuboidf[] GetSelectionBoxes(IBlockAccessor blockAccessor, BlockPos pos)
     {
-        if (!IsCoverStation())
+        if (!UsesModelDrivenStation())
         {
             return base.GetSelectionBoxes(blockAccessor, pos);
         }
 
-        BlockEntityFACoverStation? be = GetStationController(blockAccessor, GetMainPos(pos));
+        BlockEntityFACoverStation? be = IsCoverStation() ? GetStationController(blockAccessor, GetMainPos(pos)) : null;
         Vec3i partOffset = GetPartOffset();
-        List<StationElementZone> zones = BuildSelectableZones(elementZones, partOffset, be);
+        List<StationElementZone> zones = BuildSelectableZones(elementZones, partOffset, be, IncludeAllSelectionOwners(partOffset));
         return BuildSelectionBoxes(zones, partOffset, be) ?? selectionBoxes ?? base.GetSelectionBoxes(blockAccessor, pos);
     }
 
     public override Cuboidf[] GetCollisionBoxes(IBlockAccessor blockAccessor, BlockPos pos)
     {
-        return IsCoverStation()
-            ? [new Cuboidf(0f, 0f, 0f, 1f, 1.5f, 1f)]
+        return UsesModelDrivenStation()
+            ? [new Cuboidf(0f, 0f, 0f, 1f, StationCollisionHeight, 1f)]
             : base.GetCollisionBoxes(blockAccessor, pos);
     }
 
     public override bool CanAttachBlockAt(IBlockAccessor blockAccessor, Block block, BlockPos pos, BlockFacing blockFace, Cuboidi attachmentArea)
     {
-        return IsCoverStation() && blockFace == BlockFacing.UP
+        return UsesModelDrivenStation() && blockFace == BlockFacing.UP
             || base.CanAttachBlockAt(blockAccessor, block, pos, blockFace, attachmentArea);
     }
 
     public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
     {
-        if (!IsCoverStation()) return base.OnBlockInteractStart(world, byPlayer, blockSel);
+        if (!UsesModelDrivenStation()) return base.OnBlockInteractStart(world, byPlayer, blockSel);
 
-        BlockEntityFACoverStation? currentBe = GetStationController(world.BlockAccessor, GetMainPos(blockSel.Position));
+        BlockEntityFACoverStation? currentBe = IsCoverStation() ? GetStationController(world.BlockAccessor, GetMainPos(blockSel.Position)) : null;
+        Vec3i partOffset = GetPartOffset();
         StationElementZone? zone = GetZoneFromSelection(
             blockSel,
-            GetPartOffset(),
-            BuildSelectableZones(elementZones, GetPartOffset(), currentBe),
+            partOffset,
+            BuildSelectableZones(elementZones, partOffset, currentBe, IncludeAllSelectionOwners(partOffset)),
             currentBe
         );
         if (zone == null)
         {
             world.Logger.Notification(
-                "[FACore CoverStation AnimDebug] Interaction at {0} had no zone. selectionBox={1}, currentBe={2}",
+                "[FACore Station] Interaction at {0} had no zone. purpose={1}, selectionBox={2}, currentBe={3}",
                 blockSel.Position,
+                GetPurpose(),
                 blockSel.SelectionBoxIndex,
                 currentBe?.GetType().FullName ?? "null"
             );
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
+        }
+
+        if (!IsCoverStation())
+        {
+            if (world.Side == EnumAppSide.Client)
+            {
+                return true;
+            }
+
+            BlockEntityFACoverStation? stationBe = GetOrCreateStationController(world, GetMainPos(blockSel.Position));
+            if (stationBe == null)
+            {
+                Notify(byPlayer, "The station is not ready yet.");
+                return true;
+            }
+
+            stationBe.HandleElementInteraction(byPlayer, zone.ActionName);
+            return true;
         }
 
         if (zone.ActionName == "TableStorage")
@@ -384,21 +408,60 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
     {
-        return base.GetPlacedBlockInfo(world, pos, forPlayer);
+        if (!UsesModelDrivenStation())
+        {
+            return base.GetPlacedBlockInfo(world, pos, forPlayer);
+        }
+
+        BlockEntityFACoverStation? be = GetStationController(world.BlockAccessor, GetMainPos(pos));
+        if (be == null)
+        {
+            return base.GetPlacedBlockInfo(world, pos, forPlayer);
+        }
+
+        BlockSelection? selection = forPlayer.CurrentBlockSelection;
+        if (selection != null)
+        {
+            // When the player looks at a multiblock proxy part, vanilla BlockMultiblock forwards this
+            // call to the controller (pos) but leaves SelectionBoxIndex pointing into the proxy part's
+            // own selection-box array. Resolve against the part offset of the block actually being
+            // looked at so the index lines up with the boxes the player sees (otherwise every proxy box
+            // resolves to zone 0, e.g. the soldering iron holder, and slots read each other's state).
+            Vec3i partOffset = ResolveSelectionPartOffset(selection, pos);
+            BlockEntityFACoverStation? zoneBe = IsCoverStation() ? be : null;
+            StationElementZone? zone = GetZoneFromSelection(
+                selection,
+                partOffset,
+                BuildSelectableZones(elementZones, partOffset, zoneBe, IncludeAllSelectionOwners(partOffset)),
+                zoneBe
+            );
+
+            if (zone != null)
+            {
+                string zoneInfo = be.DescribeElementState(zone.ActionName);
+                if (!string.IsNullOrWhiteSpace(zoneInfo))
+                {
+                    return zoneInfo;
+                }
+            }
+        }
+
+        string info = be.DescribeState();
+        return string.IsNullOrWhiteSpace(info) ? base.GetPlacedBlockInfo(world, pos, forPlayer) : info;
     }
 
     public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
     {
-        if (!IsCoverStation())
+        if (!UsesModelDrivenStation())
         {
             return base.GetPlacedBlockInteractionHelp(world, selection, forPlayer);
         }
 
-        BlockEntityFACoverStation? be = GetStationController(world.BlockAccessor, GetMainPos(selection.Position));
+        BlockEntityFACoverStation? be = IsCoverStation() ? GetStationController(world.BlockAccessor, GetMainPos(selection.Position)) : null;
         StationElementZone? zone = GetZoneFromSelection(
             selection,
             GetPartOffset(),
-            BuildSelectableZones(elementZones, GetPartOffset(), be),
+            BuildSelectableZones(elementZones, GetPartOffset(), be, IncludeAllSelectionOwners(GetPartOffset())),
             be
         );
         if (zone != null)
@@ -407,7 +470,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             [
                 new WorldInteraction
                 {
-                    ActionLangCode = GetZoneInteractionText(zone, be, forPlayer),
+                    ActionLangCode = IsCoverStation() ? GetZoneInteractionText(zone, be, forPlayer) : GetStationZoneInteractionText(zone),
                     MouseButton = EnumMouseButton.Right
                 }
             ];
@@ -419,34 +482,40 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     public Cuboidf[] MBGetSelectionBoxes(IBlockAccessor blockAccessor, BlockPos pos, Vec3i offset)
     {
         Vec3i partOffset = ToPartOffset(offset);
-        BlockEntityFACoverStation? be = GetStationController(blockAccessor, pos.AddCopy(offset));
+        BlockEntityFACoverStation? be = IsCoverStation() ? GetStationController(blockAccessor, pos.AddCopy(offset)) : null;
         List<StationElementZone> zones = BuildSelectableZones(elementZones, partOffset, be);
-        return BuildSelectionBoxes(zones, partOffset, be) ?? [Cuboidf.Default()];
+        return BuildSelectionBoxes(zones, partOffset, be) ?? [];
     }
 
     public Cuboidf[] MBGetCollisionBoxes(IBlockAccessor blockAccessor, BlockPos pos, Vec3i offset)
     {
-        return [new Cuboidf(0f, 0f, 0f, 1f, 1.5f, 1f)];
+        if (ToPartOffset(offset).Y > 0)
+        {
+            return [];
+        }
+
+        return [new Cuboidf(0f, 0f, 0f, 1f, StationCollisionHeight, 1f)];
     }
 
     public bool MBDoPartialSelection(IWorldAccessor world, BlockPos pos, Vec3i offset)
     {
-        return IsCoverStation();
+        return UsesModelDrivenStation();
     }
 
     public bool MBOnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, Vec3i offset)
     {
-        if (!IsCoverStation()) return base.OnBlockInteractStart(world, byPlayer, blockSel);
+        if (!UsesModelDrivenStation()) return base.OnBlockInteractStart(world, byPlayer, blockSel);
 
         Vec3i partOffset = ToPartOffset(offset);
-        BlockEntityFACoverStation? currentBe = GetStationController(world.BlockAccessor, blockSel.Position.AddCopy(offset));
+        BlockEntityFACoverStation? currentBe = IsCoverStation() ? GetStationController(world.BlockAccessor, blockSel.Position.AddCopy(offset)) : null;
         List<StationElementZone> zones = BuildSelectableZones(elementZones, partOffset, currentBe);
         StationElementZone? zone = GetZoneFromSelection(blockSel, partOffset, zones, currentBe);
         if (zone == null)
         {
             world.Logger.Notification(
-                "[FACore CoverStation AnimDebug] MB interaction at {0} had no zone. controller={1}, offset={2}/{3}/{4}, selectionBox={5}, currentBe={6}",
+                "[FACore Station] MB interaction at {0} had no zone. purpose={1}, controller={2}, offset={3}/{4}/{5}, selectionBox={6}, currentBe={7}",
                 blockSel.Position,
+                GetPurpose(),
                 blockSel.Position.AddCopy(offset),
                 offset.X,
                 offset.Y,
@@ -455,6 +524,24 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
                 currentBe?.GetType().FullName ?? "null"
             );
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
+        }
+
+        if (!IsCoverStation())
+        {
+            if (world.Side == EnumAppSide.Client)
+            {
+                return true;
+            }
+
+            BlockEntityFACoverStation? stationBe = GetOrCreateStationController(world, blockSel.Position.AddCopy(offset));
+            if (stationBe == null)
+            {
+                Notify(byPlayer, "The station is not ready yet.");
+                return true;
+            }
+
+            stationBe.HandleElementInteraction(byPlayer, zone.ActionName);
+            return true;
         }
 
         if (zone.ActionName == "TableStorage")
@@ -522,6 +609,11 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public bool MBOnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, Vec3i offset)
     {
+        if (!IsCoverStation())
+        {
+            return false;
+        }
+
         return secondsUsed < FuelIgnitionSeconds
             && TryGetFuelIgnitionTarget(world, byPlayer, blockSel, ToPartOffset(offset), blockSel.Position.AddCopy(offset), out BlockEntityFACoverStation? be)
             && be.CanStartFuelIgnition(byPlayer);
@@ -529,6 +621,11 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public void MBOnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, Vec3i offset)
     {
+        if (!IsCoverStation())
+        {
+            return;
+        }
+
         if (secondsUsed < FuelIgnitionSeconds || world.Side != EnumAppSide.Server)
         {
             return;
@@ -542,6 +639,11 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
     public bool MBOnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason, Vec3i offset)
     {
+        if (!IsCoverStation())
+        {
+            return false;
+        }
+
         return TryGetFuelIgnitionTarget(world, byPlayer, blockSel, ToPartOffset(offset), blockSel.Position.AddCopy(offset), out _);
     }
 
@@ -553,7 +655,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     public WorldInteraction[] MBGetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection blockSel, IPlayer forPlayer, Vec3i offset)
     {
         Vec3i partOffset = ToPartOffset(offset);
-        BlockEntityFACoverStation? be = GetStationController(world.BlockAccessor, blockSel.Position.AddCopy(offset));
+        BlockEntityFACoverStation? be = IsCoverStation() ? GetStationController(world.BlockAccessor, blockSel.Position.AddCopy(offset)) : null;
         List<StationElementZone> zones = BuildSelectableZones(elementZones, partOffset, be);
         StationElementZone? zone = GetZoneFromSelection(blockSel, partOffset, zones, be);
         if (zone != null)
@@ -562,7 +664,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             [
                 new WorldInteraction
                 {
-                    ActionLangCode = GetZoneInteractionText(zone, be, forPlayer),
+                    ActionLangCode = IsCoverStation() ? GetZoneInteractionText(zone, be, forPlayer) : GetStationZoneInteractionText(zone),
                     MouseButton = EnumMouseButton.Right
                 }
             ];
@@ -644,6 +746,17 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     private bool IsCoverStation()
     {
         return GetPurpose() == "cover";
+    }
+
+    private bool UsesModelDrivenStation()
+    {
+        return GetPurpose() is "cover" or "decoration" or "trim";
+    }
+
+    private string FormatStationPurpose()
+    {
+        string purpose = GetPurpose();
+        return purpose.Length == 0 ? "Unknown" : char.ToUpperInvariant(purpose[0]) + purpose[1..];
     }
 
     private string GetPurpose()
@@ -737,17 +850,42 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         world.BlockAccessor.MarkBlockDirty(proxyPos, () => { });
     }
 
-    private static void EnsureStationProxy(IWorldAccessor world, BlockPos mainPos, BlockFacing side)
+    private static void RefreshPlacedStation(IWorldAccessor world, BlockPos mainPos, BlockFacing side)
     {
         if (world.Side != EnumAppSide.Server)
         {
             return;
         }
 
-        Vec3i offset = GetProxyOffset(side.Code);
+        world.BlockAccessor.MarkBlockEntityDirty(mainPos);
+        world.BlockAccessor.MarkBlockDirty(mainPos, () => { });
+
+        foreach (Vec3i offset in GetStationProxyOffsets(side))
+        {
+            BlockPos proxyPos = mainPos.AddCopy(offset.X, offset.Y, offset.Z);
+            world.BlockAccessor.MarkBlockDirty(proxyPos, () => { });
+        }
+    }
+
+    private static void EnsureStationProxies(IWorldAccessor world, BlockPos mainPos, BlockFacing side)
+    {
+        if (world.Side != EnumAppSide.Server)
+        {
+            return;
+        }
+
+        Block stationBlock = world.BlockAccessor.GetBlock(mainPos);
+        foreach (Vec3i offset in GetStationProxyOffsets(side))
+        {
+            EnsureStationProxy(world, mainPos, stationBlock, offset);
+        }
+    }
+
+    private static void EnsureStationProxy(IWorldAccessor world, BlockPos mainPos, Block stationBlock, Vec3i offset)
+    {
         BlockPos proxyPos = mainPos.AddCopy(offset.X, offset.Y, offset.Z);
         Block currentBlock = world.BlockAccessor.GetBlock(proxyPos);
-        if (!currentBlock.IsReplacableBy(world.BlockAccessor.GetBlock(mainPos)) && currentBlock is not BlockMultiblock)
+        if (!currentBlock.IsReplacableBy(stationBlock) && currentBlock is not BlockMultiblock)
         {
             return;
         }
@@ -755,7 +893,13 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         string dx = OffsetCode(offset.X);
         string dy = OffsetCode(offset.Y);
         string dz = OffsetCode(offset.Z);
-        Block? proxyBlock = world.GetBlock(new AssetLocation("game", $"multiblock-monolithic-{dx}-{dy}-{dz}"));
+        var proxyCode = new AssetLocation("game", $"multiblock-monolithic-{dx}-{dy}-{dz}");
+        if (currentBlock.Code?.Equals(proxyCode) == true)
+        {
+            return;
+        }
+
+        Block? proxyBlock = world.GetBlock(proxyCode);
         if (proxyBlock == null)
         {
             world.Logger.Warning("[FACore Station] Missing multiblock proxy block game:multiblock-monolithic-{0}-{1}-{2}", dx, dy, dz);
@@ -764,6 +908,52 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
         world.BlockAccessor.SetBlock(proxyBlock.Id, proxyPos);
         world.Logger.Notification("[FACore Station] Placed proxy {0} at {1} for controller {2}", proxyBlock.Code, proxyPos, mainPos);
+    }
+
+    private static bool CanPlaceStationProxies(IWorldAccessor world, Block stationBlock, BlockPos mainPos, BlockFacing side, out BlockPos blockedPos)
+    {
+        foreach (Vec3i offset in GetStationProxyOffsets(side))
+        {
+            BlockPos proxyPos = mainPos.AddCopy(offset.X, offset.Y, offset.Z);
+            Block currentBlock = world.BlockAccessor.GetBlock(proxyPos);
+            if (!currentBlock.IsReplacableBy(stationBlock) && currentBlock is not BlockMultiblock)
+            {
+                blockedPos = proxyPos;
+                return false;
+            }
+        }
+
+        blockedPos = mainPos;
+        return true;
+    }
+
+    private static void RemoveStationProxies(IWorldAccessor world, BlockPos mainPos, BlockFacing side)
+    {
+        if (world.Side != EnumAppSide.Server)
+        {
+            return;
+        }
+
+        foreach (Vec3i offset in GetStationProxyOffsets(side))
+        {
+            BlockPos proxyPos = mainPos.AddCopy(offset.X, offset.Y, offset.Z);
+            if (world.BlockAccessor.GetBlock(proxyPos) is BlockMultiblock)
+            {
+                world.BlockAccessor.SetBlock(0, proxyPos);
+            }
+        }
+    }
+
+    private static IEnumerable<Vec3i> GetStationProxyOffsets(BlockFacing side)
+    {
+        Vec3i horizontalOffset = GetProxyOffset(side.Code);
+        yield return horizontalOffset;
+
+        for (int y = 1; y < StationProxyRows; y++)
+        {
+            yield return new Vec3i(0, y, 0);
+            yield return new Vec3i(horizontalOffset.X, y, horizontalOffset.Z);
+        }
     }
 
     private static string OffsetCode(int value)
@@ -790,6 +980,24 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
     private Vec3i GetPartOffset()
     {
         return GetPart() == "proxy" ? GetProxyOffset(GetSide().Code) : new Vec3i(0, 0, 0);
+    }
+
+    // Offset of the block the player is actually looking at, relative to this controller block.
+    // For legacy "main"/"proxy" parts the selection always targets this block, so fall back to the
+    // static part offset. For the vanilla-multiblock layout the controller handles both its own
+    // selection (offset 0) and proxy parts forwarded by BlockMultiblock (offset = proxy - main).
+    private Vec3i ResolveSelectionPartOffset(BlockSelection selection, BlockPos controllerPos)
+    {
+        if (UsesLegacyParts())
+        {
+            return GetPartOffset();
+        }
+
+        return new Vec3i(
+            selection.Position.X - controllerPos.X,
+            selection.Position.Y - controllerPos.Y,
+            selection.Position.Z - controllerPos.Z
+        );
     }
 
     private static Vec3i GetProxyOffset(string side)
@@ -829,7 +1037,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
 
         if (boxes.Count == 0)
         {
-            boxes.Add(new Cuboidf(0f, 0f, 0f, 1f, 1.5f, 1f));
+            boxes.Add(new Cuboidf(0f, 0f, 0f, 1f, StationSelectionEnvelopeHeight, 1f));
         }
 
         return boxes.ToArray();
@@ -895,7 +1103,16 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         );
     }
 
-    private static List<StationElementZone> BuildSelectableZones(List<StationElementZone> zones, Vec3i partOffset, BlockEntityFACoverStation? be)
+    private bool IncludeAllSelectionOwners(Vec3i partOffset)
+    {
+        return UsesModelDrivenStation()
+            && !UsesLegacyParts()
+            && partOffset.X == 0
+            && partOffset.Y == 0
+            && partOffset.Z == 0;
+    }
+
+    private static List<StationElementZone> BuildSelectableZones(List<StationElementZone> zones, Vec3i partOffset, BlockEntityFACoverStation? be, bool includeAllOwners = false)
     {
         var result = new List<StationElementZone>();
         foreach (StationElementZone zone in zones)
@@ -905,7 +1122,7 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
                 continue;
             }
 
-            if (GetOwnerPartOffset(zone.StationBox) == partOffset)
+            if (includeAllOwners || GetOwnerPartOffset(zone.StationBox, partOffset) == partOffset)
             {
                 result.Add(zone);
             }
@@ -941,11 +1158,28 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
         );
     }
 
-    private static Vec3i GetOwnerPartOffset(Cuboidf stationBox)
+    private static Vec3i GetOwnerPartOffset(Cuboidf stationBox, Vec3i partOffset)
     {
         int x = (int)Math.Floor((stationBox.X1 + stationBox.X2) * 0.5f);
+        int y = (int)Math.Floor((stationBox.Y1 + stationBox.Y2) * 0.5f);
         int z = (int)Math.Floor((stationBox.Z1 + stationBox.Z2) * 0.5f);
-        return new Vec3i(x, 0, z);
+
+        if (partOffset.X != 0)
+        {
+            x = GameMath.Clamp(x, Math.Min(0, partOffset.X), Math.Max(0, partOffset.X));
+        }
+
+        if (partOffset.Y != 0)
+        {
+            y = GameMath.Clamp(y, Math.Min(0, partOffset.Y), Math.Max(0, partOffset.Y));
+        }
+
+        if (partOffset.Z != 0)
+        {
+            z = GameMath.Clamp(z, Math.Min(0, partOffset.Z), Math.Max(0, partOffset.Z));
+        }
+
+        return new Vec3i(x, y, z);
     }
 
     private static string GetZoneInteractionText(StationElementZone zone, BlockEntityFACoverStation? be, IPlayer forPlayer)
@@ -960,6 +1194,28 @@ public class BlockFAStation : Block, IMultiBlockColSelBoxes, IMultiBlockInteract
             "LiquidPour" => GetLiquidInteractionText(be, heldStack),
             "TableStorage" => GetTableInteractionText(be, heldStack),
             _ => "Use"
+        };
+    }
+
+    private static string GetStationZoneInteractionText(StationElementZone zone)
+    {
+        return zone.ActionName switch
+        {
+            "HelmetDeco" => "Use helmet decoration area",
+            "BodyDeco" => "Use chestplate decoration area",
+            "LegsDeco" => "Use leggings decoration area",
+            "CupboardSlot1" => "Use cupboard slot 1",
+            "CupboardSlot2" => "Use cupboard slot 2",
+            "CupboardSlot3" => "Use cupboard slot 3",
+            "CupboardSlot4" => "Use cupboard slot 4",
+            "CupboardSlot5" => "Use cupboard slot 5",
+            "CupboardSlot6" => "Use cupboard slot 6",
+            "MordantLinenStack" => "Use cloth cabinet",
+            "SolderHolder" => "Use soldering iron holder",
+            "CruciblePlace" => "Use crucible stand",
+            "Armor" => "Use hanging armor",
+            "RivetsPlace" => "Use rims and rivets bowl",
+            _ => "Use " + zone.ActionName
         };
     }
 

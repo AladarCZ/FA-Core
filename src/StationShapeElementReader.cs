@@ -64,7 +64,7 @@ public static class StationShapeElementReader
         if (name != null && name.EndsWith("Element", StringComparison.Ordinal) && from?.Length >= 3 && to?.Length >= 3)
         {
             string stationSide = GetStationSide(side);
-            Cuboidf stationBox = OrientBox(ToCuboid(from, to), stationSide);
+            Cuboidf stationBox = OrientBox(GetElementCuboid(element, from, to, rotationOrigin), stationSide);
             List<StationElementKeyframe>? animationBoxes = GetAnimatedStationBoxes(name, from, to, rotationOrigin, stationSide, animationTransforms);
             Cuboidf? animatedStationBox = animationBoxes is { Count: > 0 } ? animationBoxes[^1].Box : null;
             zones.Add(new StationElementZone(name, stationBox, animatedStationBox, animationBoxes));
@@ -163,6 +163,21 @@ public static class StationShapeElementReader
         float y2 = Math.Max(from[1], to[1]) / 16f;
         float z2 = Math.Max(from[2], to[2]) / 16f;
         return new Cuboidf(x1, y1, z1, x2, y2, z2);
+    }
+
+    private static Cuboidf GetElementCuboid(object element, float[] from, float[] to, float[]? rotationOrigin)
+    {
+        float rotationX = GetFloatMember(element, "RotationX");
+        float rotationY = GetFloatMember(element, "RotationY");
+        float rotationZ = GetFloatMember(element, "RotationZ");
+
+        if (rotationOrigin is not { Length: >= 3 }
+            || rotationX == 0f && rotationY == 0f && rotationZ == 0f)
+        {
+            return ToCuboid(from, to);
+        }
+
+        return TransformCuboid(from, to, rotationOrigin, new Vec3f(), rotationX, rotationY, rotationZ);
     }
 
     private static List<StationElementKeyframe>? GetAnimatedStationBoxes(string elementName, float[] from, float[] to, float[]? rotationOrigin, string side, Dictionary<string, List<AnimationTransform>> animationTransforms)

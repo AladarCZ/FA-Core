@@ -21,4 +21,5 @@
 - Added splash feedback when inserting or removing immersed plates/armor.
 - Corrected the animated fuel door selection box rotation so it follows the opened model more accurately, and let the cover station table storage zone pass through to vanilla ground storage behavior.
 - Added Greenwich armor spawn command support through `/fac greenwich`, with normalized material/cover inputs and ARL-compatible attribute setup.
-- Added FA station source/project scaffolding and source guide documentation for the code mod build.
+- Added FA station source/project scaffolding and refreshed workstation documentation for the cover, decoration, and trim stations.
+- Changed decoration station docs to distinguish staged preview removal from saw unbaking: staged materials are returned with empty-hand RMB, while saw removal destroys already baked decoration.

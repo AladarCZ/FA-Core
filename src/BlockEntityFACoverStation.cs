@@ -32,6 +32,24 @@ public class BlockEntityFACoverStation : BlockEntity
         new("game", "sounds/block/charcoal3")
     ];
     private static readonly AssetLocation IgniteSound = new("game", "sounds/torch-ignite");
+    private static readonly AssetLocation ItemInsertSound = new("game", "sounds/player/build");
+    private static readonly AssetLocation ItemPickupSound = new("game", "sounds/player/buildhigh");
+    private static readonly AssetLocation CeramicPlaceSound = new("game", "sounds/block/ceramicplace");
+    private static readonly AssetLocation ScrapeSound = new("game", "sounds/player/scrape");
+    private static readonly AssetLocation SolderSound = new("game", "sounds/effect/moltenmetal");
+    private static readonly AssetLocation[] MetalHitSounds =
+    [
+        new("game", "sounds/effect/anvilhit1"),
+        new("game", "sounds/effect/anvilhit2"),
+        new("game", "sounds/effect/anvilhit3")
+    ];
+    private static readonly AssetLocation[] SawSounds =
+    [
+        new("game", "sounds/tool/groundcrafting/saw1"),
+        new("game", "sounds/tool/groundcrafting/saw2"),
+        new("game", "sounds/tool/groundcrafting/saw3"),
+        new("game", "sounds/tool/groundcrafting/saw4")
+    ];
     private static readonly AssetLocation WaterPourSound = new("game", "sounds/effect/water-pour");
     private static readonly AssetLocation[] ItemSplashSounds =
     [
@@ -102,6 +120,38 @@ public class BlockEntityFACoverStation : BlockEntity
     private const float TableMaxZ = 16f / 16f;
     private const float TableTopY = 18f / 16f + 0.003f;
     private const float TableItemMaxDimension = 0.44f;
+    private const int DecorationClothCapacity = 12;
+    private const float DecorationShelfItemScale = 0.8f;
+    private const float DecorationShelfItemYawDegrees = 45f;
+    private const float TrimRivetsBowlItemScale = 0.70f;
+    private const float TrimCrucibleItemScale = 0.8925f;
+    private const float TrimCrucibleItemYOffset = 1f / 16f;
+    private const float TrimCrucibleItemYawDegrees = 45f;
+    private const float TrimSolderingIronItemScale = 0.7f;
+    private const int TrimSolderWeldAmount = 100;
+    private const float TrimSolderLeadMinTemperature = 327f;
+    private const float TrimSolderSilverMinTemperature = 961f;
+    private const int DecorationVisibleClothStacks = 6;
+    private const float DecorationClothStackScale = 0.8f;
+    private const float DecorationClothLayerYOffset = 1f / 64f;
+    // Use the player seraph as the armor frame: it lives in the reliably-loaded "game" domain (the survival
+    // armorstand shape is not retrievable via Shape.TryGet at tesselation time) and carries the exact joints
+    // the worn armor step-parents onto. Its own body renders transparent so only the armor shows.
+    private static readonly AssetLocation ArmorStandShapeLocation = new("game", "shapes/entity/humanoid/seraph.json");
+    private static readonly AssetLocation TransparentTextureLocation = new("game", "block/transparent");
+    // Texture codes of the base frame body that we hide so only the armor is visible.
+    private static readonly string[] ArmorStandHiddenTextureCodes = ["seraph", "hair"];
+    // Yaw applied to the assembled figure for a north-facing station; other sides add 90 deg steps.
+    // +90 deg (a 180 turn from the previous -90) faces the figure out of the stand.
+    private static readonly float ArmorStandBaseFacingRadians = GameMath.PIHALF;
+    // Small nudge of the figure away from the main block part (toward the proxy), in blocks.
+    private const float ArmorStandPushFromMain = 1.5f / 16f;
+    // Small nudge in the direction the displayed armor is facing, in blocks.
+    private const float ArmorStandForwardNudge = 4f / 16f;
+    // Lowers the displayed armor slightly so the feet sit into the stand.
+    private const float ArmorStandDropY = 2f / 16f;
+    private const float TrimArmorScale = 0.95f;
+    private const float TrimArmorExtraDropY = 0.5f;
 
     private bool lidOpen;
     private bool fuelOpen;
@@ -110,6 +160,36 @@ public class BlockEntityFACoverStation : BlockEntity
     private ItemStack? immersedStack;
     private ItemStack? fuelStack;
     private ItemStack? tableStack;
+    private ItemStack? decorationKitHeadStack;
+    private ItemStack? ornamentsStack;
+    private ItemStack? decorationKitBodyStack;
+    private ItemStack? bracketsStack;
+    private ItemStack? decorationKitLegsStack;
+    private ItemStack? fastenersStack;
+    private readonly List<ItemStack> decorationClothStacks = [];
+    private ItemStack? decorationHelmetStack;
+    private ItemStack? decorationBodyStack;
+    private ItemStack? decorationLegsStack;
+    private ItemStack? pendingHeadDecorationStack;
+    private ItemStack? pendingHeadColorStack;
+    private ItemStack? pendingBodyDecorationStack;
+    private ItemStack? pendingBodyColorStack;
+    private ItemStack? pendingLegsDecorationStack;
+    private ItemStack? pendingLegsColorStack;
+    private string pendingHeadOriginalDecoration = "";
+    private string pendingHeadOriginalColor = "";
+    private string pendingBodyOriginalDecoration = "";
+    private string pendingBodyOriginalColor = "";
+    private string pendingLegsOriginalDecoration = "";
+    private string pendingLegsOriginalColor = "";
+    private string armorStandRenderDebug = "idle";
+    private ItemStack? trimArmorStack;
+    private ItemStack? trimRivetsStack;
+    private ItemStack? trimCrucibleStack;
+    private ItemStack? trimSolderingIronStack;
+    private ItemStack? pendingTrimRivetsStack;
+    private string pendingTrimOriginalStrip = "";
+    private string trimArmorRenderDebug = "idle";
     private string processMode = "";
     private string processMetal = "";
     private double processStartHours = -1;
@@ -127,6 +207,35 @@ public class BlockEntityFACoverStation : BlockEntity
     public bool LidOpen => lidOpen;
     public bool FuelOpen => fuelOpen;
 
+    private bool IsCoverStationBlock()
+    {
+        string[] parts = Block?.Code?.Path.Split('-') ?? [];
+        if (parts.Length < 3 || parts[0] != "fa" || parts[1] != "workstation")
+        {
+            return true;
+        }
+
+        return parts[2] == "cover";
+    }
+
+    private bool IsDecorationStationBlock()
+    {
+        string[] parts = Block?.Code?.Path.Split('-') ?? [];
+        return parts.Length >= 3
+            && parts[0] == "fa"
+            && parts[1] == "workstation"
+            && parts[2] == "decoration";
+    }
+
+    private bool IsTrimStationBlock()
+    {
+        string[] parts = Block?.Code?.Path.Split('-') ?? [];
+        return parts.Length >= 3
+            && parts[0] == "fa"
+            && parts[1] == "workstation"
+            && parts[2] == "trim";
+    }
+
     public float GetAnimationProgress(string code, bool openFallback)
     {
         RunningAnimation? runningAnimation = AnimUtil?.animator?.GetAnimationState(code);
@@ -135,6 +244,22 @@ public class BlockEntityFACoverStation : BlockEntity
 
     public void HandleElementInteraction(IPlayer byPlayer, string actionName)
     {
+        if (!IsCoverStationBlock())
+        {
+            if (IsDecorationStationBlock())
+            {
+                HandleDecorationElementInteraction(byPlayer, actionName);
+                return;
+            }
+
+            if (IsTrimStationBlock())
+            {
+                HandleTrimElementInteraction(byPlayer, actionName);
+            }
+
+            return;
+        }
+
         switch (actionName)
         {
             case "LidOpen":
@@ -182,9 +307,222 @@ public class BlockEntityFACoverStation : BlockEntity
 
     public string DescribeState()
     {
+        if (!IsCoverStationBlock())
+        {
+            return "";
+        }
+
         var builder = new StringBuilder();
         AppendStationDisplayInfo(builder);
         return builder.ToString();
+    }
+
+    public string DescribeElementState(string actionName)
+    {
+        if (IsDecorationStationBlock())
+        {
+            return DescribeDecorationElementState(actionName);
+        }
+
+        if (IsTrimStationBlock())
+        {
+            return DescribeTrimElementState(actionName);
+        }
+
+        return DescribeState();
+    }
+
+    private string DescribeDecorationElementState(string actionName)
+    {
+        return actionName switch
+        {
+            "HelmetDeco" => DescribeDecorationArmorState("Helmet", "head", decorationHelmetStack),
+            "BodyDeco" => DescribeDecorationArmorState("Chestplate", "body", decorationBodyStack),
+            "LegsDeco" => DescribeDecorationArmorState("Leggings", "legs", decorationLegsStack),
+            "CupboardSlot1" or "CupboardSlot2" or "CupboardSlot3" or "CupboardSlot4" or "CupboardSlot5" or "CupboardSlot6"
+                => DescribeStorageSlotState(GetDecorationSlotName(actionName), GetDecorationShelfStack(actionName)),
+            "MordantLinenStack" => DescribeDecorationClothState(),
+            _ => ""
+        };
+    }
+
+    private string DescribeDecorationArmorState(string label, string piece, ItemStack? armorStack)
+    {
+        var builder = new StringBuilder();
+        builder.Append(label);
+        builder.Append(": ");
+        builder.Append(armorStack?.GetName() ?? "empty");
+
+        if (armorStack == null)
+        {
+            return builder.ToString();
+        }
+
+        ITreeAttribute? types = armorStack.Attributes?.GetTreeAttribute("types");
+        string decoration = FormatStationValue(types?.GetString("decoration" + piece, "none") ?? "none");
+        string color = FormatStationValue(types?.GetString("color" + piece, "none") ?? "none");
+        bool hasPending = HasPendingDecorationEdits(piece);
+        bool hasBaked = !hasPending && (decoration != "none" || color != "none");
+
+        builder.AppendLine();
+        builder.Append("Decoration: ");
+        builder.Append(decoration);
+        builder.AppendLine();
+        builder.Append("Color: ");
+        builder.Append(color);
+        builder.AppendLine();
+        builder.Append(hasBaked ? "Finished" : "Unfinished");
+        return builder.ToString();
+    }
+
+    private string DescribeDecorationClothState()
+    {
+        var builder = new StringBuilder();
+        builder.Append("Cloth: ");
+        builder.Append(decorationClothStacks.Count);
+        builder.Append("/");
+        builder.Append(DecorationClothCapacity);
+
+        if (decorationClothStacks.Count > 0)
+        {
+            builder.AppendLine();
+            builder.Append("Top: ");
+            builder.Append(decorationClothStacks[^1].GetName());
+        }
+
+        return builder.ToString();
+    }
+
+    private string DescribeTrimElementState(string actionName)
+    {
+        return actionName switch
+        {
+            "Armor" => DescribeTrimArmorState(),
+            "RivetsPlace" => DescribeTrimRivetsState(),
+            "CruciblePlace" => DescribeTrimCrucibleState(),
+            "SolderHolder" => DescribeStorageSlotState("Soldering iron", trimSolderingIronStack),
+            _ => ""
+        };
+    }
+
+    private string DescribeTrimArmorState()
+    {
+        var builder = new StringBuilder();
+        builder.Append("Mounted: ");
+        builder.Append(trimArmorStack?.GetName() ?? "empty");
+
+        if (trimArmorStack == null)
+        {
+            return builder.ToString();
+        }
+
+        string trim = "none";
+        if (TryGetFAArmorInfo(trimArmorStack, out FAArmorInfo armorInfo))
+        {
+            ITreeAttribute? types = trimArmorStack.Attributes?.GetTreeAttribute("types");
+            trim = FormatStationValue(types?.GetString("strip" + armorInfo.Piece, "none") ?? "none");
+        }
+
+        bool hasPending = pendingTrimRivetsStack != null;
+        bool hasBaked = !hasPending && trim != "none";
+
+        builder.AppendLine();
+        builder.Append("Rivets: ");
+        builder.Append(trim);
+        builder.AppendLine();
+        builder.Append("Status: ");
+        builder.Append(hasBaked ? "Finished" : "Unfinished");
+        return builder.ToString();
+    }
+
+    private string DescribeTrimRivetsState()
+    {
+        var builder = new StringBuilder();
+        builder.Append("Rims and rivets: ");
+        builder.Append(trimRivetsStack?.GetName() ?? "empty");
+
+        if (pendingTrimRivetsStack != null)
+        {
+            builder.AppendLine();
+            builder.Append("Staged: ");
+            builder.Append(pendingTrimRivetsStack.GetName());
+            builder.Append(" (Unfinished)");
+        }
+
+        return builder.ToString();
+    }
+
+    private string DescribeTrimCrucibleState()
+    {
+        var builder = new StringBuilder();
+        builder.Append("Crucible: ");
+        builder.Append(trimCrucibleStack?.GetName() ?? "empty");
+
+        if (trimCrucibleStack == null)
+        {
+            builder.AppendLine();
+            builder.Append("Solder: 0 ml / ");
+            builder.Append(TrimSolderWeldAmount);
+            builder.Append(" ml");
+            builder.AppendLine();
+            builder.Append("Status: Not Ok");
+            return builder.ToString();
+        }
+
+        if (!TryGetSolderContent(trimCrucibleStack, out SolderContent solderContent, logDebug: false))
+        {
+            builder.AppendLine();
+            builder.Append("Solder: unreadable / ");
+            builder.Append(TrimSolderWeldAmount);
+            builder.Append(" ml");
+            builder.AppendLine();
+            builder.Append("Status: Not Ok");
+            return builder.ToString();
+        }
+
+        float requiredTemperature = solderContent.Metal == "silver" ? TrimSolderSilverMinTemperature : TrimSolderLeadMinTemperature;
+        bool ready = solderContent.Amount >= TrimSolderWeldAmount && solderContent.Temperature >= requiredTemperature;
+
+        builder.AppendLine();
+        builder.Append("Solder: ");
+        builder.Append(solderContent.Amount);
+        builder.Append(" ml / ");
+        builder.Append(TrimSolderWeldAmount);
+        builder.Append(" ml");
+        builder.AppendLine();
+        builder.Append("Metal: ");
+        builder.Append(FormatStationValue(solderContent.Metal));
+        builder.AppendLine();
+        builder.Append("Temperature: ");
+        builder.Append(solderContent.Temperature.ToString("0"));
+        builder.Append("C");
+        builder.AppendLine();
+        builder.Append("Status: ");
+        builder.Append(ready ? "Ok" : "Not Ok");
+        return builder.ToString();
+    }
+
+    private static string DescribeStorageSlotState(string label, ItemStack? stack)
+    {
+        return label + ": " + (stack?.GetName() ?? "empty");
+    }
+
+    private static string FormatStationValue(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || string.Equals(value, "none", StringComparison.OrdinalIgnoreCase))
+        {
+            return "none";
+        }
+
+        return value switch
+        {
+            "bismuthbronze" => "bismuth bronze",
+            "blackbronze" => "black bronze",
+            "tinbronze" => "tin bronze",
+            "meteoriciron" => "meteoric iron",
+            "blistersteel" => "blister steel",
+            _ => value
+        };
     }
 
     private void AppendStationDisplayInfo(StringBuilder builder)
@@ -246,6 +584,16 @@ public class BlockEntityFACoverStation : BlockEntity
     public override void Initialize(ICoreAPI api)
     {
         base.Initialize(api);
+        if (api.Side == EnumAppSide.Server && Block is BlockFAStation station)
+        {
+            station.EnsureStationStructure(api.World, Pos);
+        }
+
+        if (!IsCoverStationBlock())
+        {
+            return;
+        }
+
         AnimDebugLog($"Initialize side={api.Side}, block={Block?.Code}, behaviors={FormatBehaviors()}");
 
         if (api.Side == EnumAppSide.Client)
@@ -266,6 +614,23 @@ public class BlockEntityFACoverStation : BlockEntity
     public override void ToTreeAttributes(ITreeAttribute tree)
     {
         base.ToTreeAttributes(tree);
+        if (IsDecorationStationBlock())
+        {
+            WriteDecorationTreeAttributes(tree);
+            return;
+        }
+
+        if (IsTrimStationBlock())
+        {
+            WriteTrimTreeAttributes(tree);
+            return;
+        }
+
+        if (!IsCoverStationBlock())
+        {
+            return;
+        }
+
         AnimDebugLog($"ToTreeAttributes lidOpen={lidOpen}, fuelOpen={fuelOpen}, fuelLit={fuelLit}");
         tree.SetBool("lidOpen", lidOpen);
         tree.SetBool("fuelOpen", fuelOpen);
@@ -282,6 +647,23 @@ public class BlockEntityFACoverStation : BlockEntity
     public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
     {
         base.FromTreeAttributes(tree, worldForResolving);
+        if (IsDecorationStationBlock())
+        {
+            ReadDecorationTreeAttributes(tree, worldForResolving);
+            return;
+        }
+
+        if (IsTrimStationBlock())
+        {
+            ReadTrimTreeAttributes(tree, worldForResolving);
+            return;
+        }
+
+        if (!IsCoverStationBlock())
+        {
+            return;
+        }
+
         lidOpen = tree.GetBool("lidOpen");
         fuelOpen = tree.GetBool("fuelOpen");
         fuelLit = tree.GetBool("fuelLit");
@@ -307,6 +689,23 @@ public class BlockEntityFACoverStation : BlockEntity
     public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
     {
         bool skipDefaultMesh = base.OnTesselation(mesher, tessThreadTesselator);
+        if (IsDecorationStationBlock())
+        {
+            AddDecorationStationMeshes(mesher, tessThreadTesselator);
+            return skipDefaultMesh;
+        }
+
+        if (IsTrimStationBlock())
+        {
+            AddTrimStationMeshes(mesher, tessThreadTesselator);
+            return skipDefaultMesh;
+        }
+
+        if (!IsCoverStationBlock())
+        {
+            return skipDefaultMesh;
+        }
+
         if (lidOpen || fuelOpen)
         {
             skipDefaultMesh = true;
@@ -368,6 +767,26 @@ public class BlockEntityFACoverStation : BlockEntity
 
     public override void OnBlockBroken(IPlayer byPlayer)
     {
+        if (IsDecorationStationBlock())
+        {
+            base.OnBlockBroken(byPlayer);
+            DropDecorationInventory();
+            return;
+        }
+
+        if (IsTrimStationBlock())
+        {
+            base.OnBlockBroken(byPlayer);
+            DropTrimInventory();
+            return;
+        }
+
+        if (!IsCoverStationBlock())
+        {
+            base.OnBlockBroken(byPlayer);
+            return;
+        }
+
         StopProcessLoopSound(immediate: true);
         base.OnBlockBroken(byPlayer);
 
@@ -392,19 +811,60 @@ public class BlockEntityFACoverStation : BlockEntity
 
     public override void OnBlockRemoved()
     {
+        if (!IsCoverStationBlock())
+        {
+            base.OnBlockRemoved();
+            return;
+        }
+
         StopProcessLoopSound(immediate: true);
         base.OnBlockRemoved();
     }
 
     public override void OnBlockUnloaded()
     {
+        if (!IsCoverStationBlock())
+        {
+            base.OnBlockUnloaded();
+            return;
+        }
+
         StopProcessLoopSound(immediate: true);
         base.OnBlockUnloaded();
     }
 
     public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
     {
+        if (IsDecorationStationBlock())
+        {
+            dsc.Clear();
+            if (TryAppendSelectedElementInfo(forPlayer, dsc))
+            {
+                return;
+            }
+
+            AppendDecorationStationDisplayInfo(dsc);
+            return;
+        }
+
+        if (IsTrimStationBlock())
+        {
+            dsc.Clear();
+            if (TryAppendSelectedElementInfo(forPlayer, dsc))
+            {
+                return;
+            }
+
+            AppendTrimStationDisplayInfo(dsc);
+            return;
+        }
+
         base.GetBlockInfo(forPlayer, dsc);
+
+        if (!IsCoverStationBlock())
+        {
+            return;
+        }
 
         if (dsc.Length > 0)
         {
@@ -412,6 +872,98 @@ public class BlockEntityFACoverStation : BlockEntity
         }
 
         AppendStationDisplayInfo(dsc);
+    }
+
+    private bool TryAppendSelectedElementInfo(IPlayer forPlayer, StringBuilder dsc)
+    {
+        BlockSelection? selection = forPlayer.CurrentBlockSelection;
+        if (selection == null || selection.SelectionBoxIndex < 0)
+        {
+            return false;
+        }
+
+        if (!TryResolveSelectedElementAction(selection, out string actionName))
+        {
+            return false;
+        }
+
+        string info = DescribeElementState(actionName);
+        if (string.IsNullOrWhiteSpace(info))
+        {
+            return false;
+        }
+
+        dsc.Append(info);
+        return true;
+    }
+
+    private bool TryResolveSelectedElementAction(BlockSelection selection, out string actionName)
+    {
+        actionName = "";
+        List<StationElementZone> zones = StationShapeElementReader.LoadElementZones(Api, Block);
+        if (zones.Count == 0)
+        {
+            return false;
+        }
+
+        Vec3i partOffset = new(
+            selection.Position.X - Pos.X,
+            selection.Position.Y - Pos.Y,
+            selection.Position.Z - Pos.Z
+        );
+
+        if (selection.HitPosition != null)
+        {
+            StationElementZone? bestZone = null;
+            double bestDistance = double.MaxValue;
+            foreach (StationElementZone zone in zones)
+            {
+                double distance = DistanceToBoxCenter(selection.HitPosition, ToPartBox(zone.StationBox, partOffset));
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestZone = zone;
+                }
+            }
+
+            if (bestZone != null)
+            {
+                actionName = bestZone.ActionName;
+                return true;
+            }
+        }
+
+        int zoneIndex = selection.SelectionBoxIndex;
+        if (zoneIndex < 0 || zoneIndex >= zones.Count)
+        {
+            return false;
+        }
+
+        actionName = zones[zoneIndex].ActionName;
+        return true;
+    }
+
+    private static Cuboidf ToPartBox(Cuboidf stationBox, Vec3i partOffset)
+    {
+        return new Cuboidf(
+            stationBox.X1 - partOffset.X,
+            stationBox.Y1 - partOffset.Y,
+            stationBox.Z1 - partOffset.Z,
+            stationBox.X2 - partOffset.X,
+            stationBox.Y2 - partOffset.Y,
+            stationBox.Z2 - partOffset.Z
+        );
+    }
+
+    private static double DistanceToBoxCenter(Vec3d point, Cuboidf box)
+    {
+        double centerX = (box.X1 + box.X2) * 0.5;
+        double centerY = (box.Y1 + box.Y2) * 0.5;
+        double centerZ = (box.Z1 + box.Z2) * 0.5;
+        double dx = point.X - centerX;
+        double dy = point.Y - centerY;
+        double dz = point.Z - centerZ;
+        return dx * dx + dy * dy + dz * dz;
     }
 
     private void TryInteractFuel(IPlayer byPlayer)
@@ -548,6 +1100,736 @@ public class BlockEntityFACoverStation : BlockEntity
         activeSlot.MarkDirty();
         MarkStationDirty();
         NotifyInfo(byPlayer, $"Placed {tableStack.GetName()} on the table.");
+    }
+
+    private void HandleDecorationElementInteraction(IPlayer byPlayer, string actionName)
+    {
+        switch (actionName)
+        {
+            case "CupboardSlot1":
+            case "CupboardSlot2":
+            case "CupboardSlot3":
+            case "CupboardSlot4":
+            case "CupboardSlot5":
+            case "CupboardSlot6":
+                TryInteractDecorationShelfSlot(byPlayer, actionName);
+                return;
+
+            case "MordantLinenStack":
+                TryInteractDecorationClothStorage(byPlayer);
+                return;
+
+            case "HelmetDeco":
+                TryInteractDecorationArmorSlot(byPlayer, actionName, "head", "helmet");
+                return;
+
+            case "BodyDeco":
+                TryInteractDecorationArmorSlot(byPlayer, actionName, "body", "chestplate");
+                return;
+
+            case "LegsDeco":
+                TryInteractDecorationArmorSlot(byPlayer, actionName, "legs", "leggings");
+                return;
+
+            default:
+                Notify(byPlayer, "This part of the decoration station cannot be used right now.");
+                return;
+        }
+    }
+
+    private void TryInteractDecorationShelfSlot(IPlayer byPlayer, string actionName)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+        ItemStack? storedStack = GetDecorationShelfStack(actionName);
+        string slotName = GetDecorationSlotName(actionName);
+
+        if (storedStack != null)
+        {
+            if (heldStack != null)
+            {
+                Notify(byPlayer, $"The {slotName} is already holding an item.");
+                return;
+            }
+
+            SetDecorationShelfStack(actionName, null);
+            GiveOrDrop(byPlayer, storedStack, 1.1);
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, $"Picked up {storedStack.GetName()} from the {slotName}.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, $"The {slotName} is empty.");
+            return;
+        }
+
+        if (!IsDecorationSmallItem(heldStack))
+        {
+            Notify(byPlayer, "Only Forgotten Armory fittings (rivets, brackets, fasteners, ornaments, decoration kits) belong in the cupboard.");
+            return;
+        }
+
+        ItemStack inserted = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        SetDecorationShelfStack(actionName, inserted);
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed {inserted.GetName()} in the {slotName}.");
+    }
+
+    private void TryInteractDecorationClothStorage(IPlayer byPlayer)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+
+        if (heldStack == null)
+        {
+            if (decorationClothStacks.Count == 0)
+            {
+                Notify(byPlayer, "The cloth cabinet is empty.");
+                return;
+            }
+
+            ItemStack takeStack = decorationClothStacks[^1];
+            decorationClothStacks.RemoveAt(decorationClothStacks.Count - 1);
+            GiveOrDrop(byPlayer, takeStack, 0.65);
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, $"Picked up {takeStack.GetName()} from the cloth cabinet ({decorationClothStacks.Count}/{DecorationClothCapacity}).");
+            return;
+        }
+
+        if (!IsDecorationCloth(heldStack))
+        {
+            Notify(byPlayer, "Only cloth can be stored in the cabinet.");
+            return;
+        }
+
+        if (decorationClothStacks.Count >= DecorationClothCapacity)
+        {
+            Notify(byPlayer, "The cloth cabinet is full.");
+            return;
+        }
+
+        ItemStack inserted = activeSlot!.TakeOut(1);
+        activeSlot.MarkDirty();
+        decorationClothStacks.Add(inserted);
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Stored {inserted.GetName()} in the cloth cabinet ({decorationClothStacks.Count}/{DecorationClothCapacity}).");
+    }
+
+    private void TryInteractDecorationArmorSlot(IPlayer byPlayer, string actionName, string expectedPiece, string slotName)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+        ItemStack? storedStack = GetDecorationArmorStack(actionName);
+
+        if (storedStack != null)
+        {
+            if (IsIronOrBetterTool(heldStack, "hammer"))
+            {
+                TryBakeDecorationArmor(byPlayer, storedStack, expectedPiece, slotName);
+                return;
+            }
+
+            if (IsIronOrBetterTool(heldStack, "saw"))
+            {
+                if (!TryRemoveBakedDecorationWithSaw(byPlayer, storedStack, expectedPiece, slotName))
+                {
+                    Notify(byPlayer, $"There is no baked decoration to remove from this {slotName}.");
+                }
+
+                return;
+            }
+
+            if (heldStack != null)
+            {
+                TryStageDecorationMaterial(byPlayer, activeSlot!, heldStack, storedStack, expectedPiece, slotName);
+                return;
+            }
+
+            if (HasPendingDecorationEdits(expectedPiece))
+            {
+                TryRemovePendingDecorationMaterial(byPlayer, storedStack, expectedPiece);
+                return;
+            }
+
+            SetDecorationArmorStack(actionName, null);
+            GiveOrDrop(byPlayer, storedStack, 1.1);
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, $"Picked up {storedStack.GetName()} from the armor stand.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, $"The armor stand has no {slotName}.");
+            return;
+        }
+
+        if (!TryGetFAArmorPiece(heldStack, out string piece) || piece != expectedPiece)
+        {
+            Notify(byPlayer, $"Place a Forgotten Armory {slotName} here.");
+            return;
+        }
+
+        ItemStack inserted = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        SetDecorationArmorStack(actionName, inserted);
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed {inserted.GetName()} on the armor stand.");
+    }
+
+    private void TryStageDecorationMaterial(IPlayer byPlayer, ItemSlot activeSlot, ItemStack heldStack, ItemStack armorStack, string expectedPiece, string slotName)
+    {
+        if (!TryParseDecorationMaterial(heldStack, expectedPiece, out string editKind, out string value, out string failure))
+        {
+            Notify(byPlayer, failure.Length > 0 ? failure : $"That material does not belong on this {slotName}.");
+            return;
+        }
+
+        if (!TryGetFAArmorInfo(armorStack, out FAArmorInfo armorInfo) || armorInfo.Piece != expectedPiece)
+        {
+            Notify(byPlayer, $"Place a Forgotten Armory {slotName} here first.");
+            return;
+        }
+
+        ITreeAttribute? types = armorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            Notify(byPlayer, "This armor piece cannot be decorated.");
+            return;
+        }
+
+        if (GetPendingDecorationMaterial(expectedPiece, editKind) != null)
+        {
+            Notify(byPlayer, $"This {slotName} already has a staged {GetDecorationEditName(editKind)}. Remove it first.");
+            return;
+        }
+
+        string attrKey = editKind + expectedPiece;
+        string currentValue = types.GetString(attrKey) ?? "none";
+        if (!string.Equals(currentValue, "none", StringComparison.Ordinal))
+        {
+            Notify(byPlayer, $"This {slotName} already has {GetDecorationEditName(editKind)} baked in.");
+            return;
+        }
+
+        if (editKind == "color")
+        {
+            string currentDecoration = types.GetString("decoration" + expectedPiece) ?? "none";
+            if (string.Equals(currentDecoration, "none", StringComparison.Ordinal))
+            {
+                Notify(byPlayer, $"Add a decoration to the {slotName} before adding a color kit.");
+                return;
+            }
+        }
+
+        if (editKind == "decoration"
+            && !TryResolveFAArmorShape(armorInfo, value, types.GetString("form" + expectedPiece, "") ?? "", out _, out _))
+        {
+            Notify(byPlayer, $"This decoration does not fit the {slotName}.");
+            return;
+        }
+
+        ItemStack inserted = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        SetPendingOriginalValue(expectedPiece, editKind, currentValue);
+        SetPendingDecorationMaterial(expectedPiece, editKind, inserted);
+        types.SetString(attrKey, value);
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Previewing {inserted.GetName()} on the {slotName}. Right-click with an iron or better hammer to bake it.");
+    }
+
+    private bool TryRemoveBakedDecorationWithSaw(IPlayer byPlayer, ItemStack armorStack, string piece, string slotName)
+    {
+        ITreeAttribute? types = armorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            Notify(byPlayer, "This armor piece cannot be decorated.");
+            return true;
+        }
+
+        string decorationKey = "decoration" + piece;
+        string colorKey = "color" + piece;
+        if (HasPendingDecorationEdits(piece))
+        {
+            Notify(byPlayer, $"Only staged decoration is on this {slotName}. Use an empty hand to remove the preview.");
+            return true;
+        }
+
+        bool hadDecoration = !string.Equals(types.GetString(decorationKey, "none"), "none", StringComparison.Ordinal);
+        bool hadColor = !string.Equals(types.GetString(colorKey, "none"), "none", StringComparison.Ordinal);
+
+        if (!hadDecoration && !hadColor)
+        {
+            return false;
+        }
+
+        types.SetString(decorationKey, "none");
+        types.SetString(colorKey, "none");
+        PlaySawSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Unbaked and removed the {slotName} decoration.");
+        return true;
+    }
+
+    private bool TryRemovePendingDecorationMaterial(IPlayer byPlayer, ItemStack armorStack, string piece)
+    {
+        if (TryRemovePendingDecorationMaterial(byPlayer, armorStack, piece, "color"))
+        {
+            return true;
+        }
+
+        return TryRemovePendingDecorationMaterial(byPlayer, armorStack, piece, "decoration");
+    }
+
+    private bool TryRemovePendingDecorationMaterial(IPlayer byPlayer, ItemStack armorStack, string piece, string editKind)
+    {
+        ItemStack? pendingStack = GetPendingDecorationMaterial(piece, editKind);
+        if (pendingStack == null)
+        {
+            return false;
+        }
+
+        RestorePendingDecorationValue(armorStack, piece, editKind);
+        SetPendingDecorationMaterial(piece, editKind, null);
+        SetPendingOriginalValue(piece, editKind, "");
+        GiveOrDrop(byPlayer, pendingStack, 1.1);
+        PlayItemPickupSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Removed staged {pendingStack.GetName()}.");
+        return true;
+    }
+
+    private void TryBakeDecorationArmor(IPlayer byPlayer, ItemStack armorStack, string piece, string slotName)
+    {
+        if (!HasPendingDecorationEdits(piece))
+        {
+            Notify(byPlayer, $"There are no staged decorations to bake on this {slotName}.");
+            return;
+        }
+
+        SetPendingDecorationMaterial(piece, "decoration", null);
+        SetPendingDecorationMaterial(piece, "color", null);
+        SetPendingOriginalValue(piece, "decoration", "");
+        SetPendingOriginalValue(piece, "color", "");
+        PlayMetalHitSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Baked the staged {slotName} decoration.");
+    }
+
+    private void HandleTrimElementInteraction(IPlayer byPlayer, string actionName)
+    {
+        switch (actionName)
+        {
+            case "Armor":
+                TryInteractTrimArmorSlot(byPlayer);
+                return;
+
+            case "RivetsPlace":
+                TryInteractTrimRivetsPlace(byPlayer);
+                return;
+
+            case "CruciblePlace":
+                TryInteractTrimCruciblePlace(byPlayer);
+                return;
+
+            case "SolderHolder":
+                TryInteractTrimSolderHolder(byPlayer);
+                return;
+
+            default:
+                Notify(byPlayer, "This part of the hemming crane cannot be used right now.");
+                return;
+        }
+    }
+
+    private void TryInteractTrimArmorSlot(IPlayer byPlayer)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+
+        if (trimArmorStack != null)
+        {
+            if (IsIronOrBetterTongs(heldStack))
+            {
+                TryRemoveBakedTrimWithTongs(byPlayer);
+                return;
+            }
+
+            if (IsSneaking(byPlayer))
+            {
+                if (!IsSolderingIron(heldStack))
+                {
+                    Notify(byPlayer, "Hold a soldering iron to bake the staged trim.");
+                    return;
+                }
+
+                TryBakeTrimArmor(byPlayer);
+                return;
+            }
+
+            if (heldStack != null)
+            {
+                TryStageTrimMaterial(byPlayer, activeSlot!, heldStack);
+                return;
+            }
+
+            if (TryRemovePendingTrimMaterial(byPlayer))
+            {
+                return;
+            }
+
+            GiveOrDrop(byPlayer, trimArmorStack, 1.1);
+            trimArmorStack = null;
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, "Picked up armor from the hemming crane.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, "The hemming crane has no armor.");
+            return;
+        }
+
+        if (!TryGetFAArmorPiece(heldStack, out _))
+        {
+            Notify(byPlayer, "Place a Forgotten Armory armor piece here.");
+            return;
+        }
+
+        trimArmorStack = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed {trimArmorStack.GetName()} on the hemming crane.");
+    }
+
+    private void TryInteractTrimRivetsPlace(IPlayer byPlayer)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+
+        if (trimArmorStack != null && IsIronOrBetterTongs(heldStack))
+        {
+            TryRemoveBakedTrimWithTongs(byPlayer);
+            return;
+        }
+
+        if (trimArmorStack != null && heldStack != null)
+        {
+            TryStageTrimMaterial(byPlayer, activeSlot!, heldStack);
+            return;
+        }
+
+        if (trimArmorStack != null && heldStack == null && TryRemovePendingTrimMaterial(byPlayer))
+        {
+            return;
+        }
+
+        if (trimRivetsStack != null)
+        {
+            if (heldStack != null)
+            {
+                Notify(byPlayer, "The rims and rivets bowl is already occupied.");
+                return;
+            }
+
+            GiveOrDrop(byPlayer, trimRivetsStack, 0.9);
+            trimRivetsStack = null;
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, "Picked up rims and rivets from the bowl.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, "The rims and rivets bowl is empty.");
+            return;
+        }
+
+        if (!TryGetRimsAndRivetsMetal(heldStack, out _))
+        {
+            Notify(byPlayer, "Only rims and rivets belong in this bowl.");
+            return;
+        }
+
+        trimRivetsStack = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed {trimRivetsStack.GetName()} in the bowl.");
+    }
+
+    private void TryInteractTrimCruciblePlace(IPlayer byPlayer)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+        TrimDebugLog($"CruciblePlace interact held={FormatStackDebug(heldStack)} stored={FormatStackDebug(trimCrucibleStack)} heldAttrs={FormatTreeDebug(heldStack?.Attributes)}");
+
+        if (trimCrucibleStack != null)
+        {
+            if (heldStack != null)
+            {
+                Notify(byPlayer, "The crucible stand is already occupied.");
+                return;
+            }
+
+            GiveOrDrop(byPlayer, trimCrucibleStack, 0.9);
+            trimCrucibleStack = null;
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, "Picked up the solder crucible.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, "The crucible stand is empty.");
+            return;
+        }
+
+        if (!IsLeadOrSilverSolderCrucible(heldStack, requireHeat: false, out string solderMetal, out string failure))
+        {
+            TrimDebugLog($"CruciblePlace rejected held={FormatStackDebug(heldStack)} failure={failure} attrs={FormatTreeDebug(heldStack.Attributes)}");
+            Notify(byPlayer, failure);
+            return;
+        }
+
+        trimCrucibleStack = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        TrimDebugLog($"CruciblePlace accepted metal={solderMetal} stored={FormatStackDebug(trimCrucibleStack)} attrs={FormatTreeDebug(trimCrucibleStack?.Attributes)}");
+        PlayCeramicPlaceSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed hot {solderMetal} solder crucible on the stand.");
+    }
+
+    private void TryInteractTrimSolderHolder(IPlayer byPlayer)
+    {
+        ItemSlot? activeSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+        ItemStack? heldStack = activeSlot?.Itemstack;
+
+        if (trimSolderingIronStack != null)
+        {
+            if (heldStack != null)
+            {
+                Notify(byPlayer, "The soldering iron holder is already occupied.");
+                return;
+            }
+
+            GiveOrDrop(byPlayer, trimSolderingIronStack, 0.9);
+            trimSolderingIronStack = null;
+            PlayItemPickupSound(byPlayer);
+            MarkStationDirty();
+            NotifyInfo(byPlayer, "Picked up the soldering iron.");
+            return;
+        }
+
+        if (activeSlot == null || activeSlot.Empty || heldStack == null)
+        {
+            Notify(byPlayer, "The soldering iron holder is empty.");
+            return;
+        }
+
+        if (!IsSolderingIron(heldStack))
+        {
+            Notify(byPlayer, "Only a soldering iron belongs in this holder.");
+            return;
+        }
+
+        trimSolderingIronStack = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Placed {trimSolderingIronStack.GetName()} in the holder.");
+    }
+
+    private void TryStageTrimMaterial(IPlayer byPlayer, ItemSlot activeSlot, ItemStack heldStack)
+    {
+        if (trimArmorStack == null)
+        {
+            Notify(byPlayer, "Place armor on the hemming crane first.");
+            return;
+        }
+
+        if (!TryGetRimsAndRivetsMetal(heldStack, out string metal))
+        {
+            Notify(byPlayer, "Use rims and rivets to preview trim.");
+            return;
+        }
+
+        if (pendingTrimRivetsStack != null)
+        {
+            Notify(byPlayer, "This armor already has staged trim. Remove it first.");
+            return;
+        }
+
+        if (!TryGetFAArmorInfo(trimArmorStack, out FAArmorInfo armorInfo))
+        {
+            Notify(byPlayer, "This armor piece cannot be trimmed.");
+            return;
+        }
+
+        ITreeAttribute? types = trimArmorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            Notify(byPlayer, "This armor piece cannot be trimmed.");
+            return;
+        }
+
+        string stripKey = "strip" + armorInfo.Piece;
+        string currentStrip = types.GetString(stripKey) ?? "none";
+
+        if (!TextureAssetExists(new AssetLocation("facore", $"armor/entity/trim/{metal}")))
+        {
+            Notify(byPlayer, $"No trim texture exists for {metal}.");
+            return;
+        }
+
+        pendingTrimOriginalStrip = currentStrip;
+        pendingTrimRivetsStack = activeSlot.TakeOut(1);
+        activeSlot.MarkDirty();
+        types.SetString(stripKey, metal);
+        PlayItemInsertSound(byPlayer);
+        MarkStationDirty();
+        if (IsTrimValueSet(currentStrip))
+        {
+            NotifyInfo(byPlayer, $"Previewing {pendingTrimRivetsStack.GetName()} trim. Remove the existing rivets with iron or better tongs before baking.");
+            return;
+        }
+
+        NotifyInfo(byPlayer, $"Previewing {pendingTrimRivetsStack.GetName()} trim. Hold a soldering iron and sneak-right-click the armor to bake it.");
+    }
+
+    private bool TryRemovePendingTrimMaterial(IPlayer byPlayer)
+    {
+        if (trimArmorStack == null || pendingTrimRivetsStack == null)
+        {
+            return false;
+        }
+
+        RestorePendingTrimPreview();
+        GiveOrDrop(byPlayer, pendingTrimRivetsStack, 0.9);
+        pendingTrimRivetsStack = null;
+        pendingTrimOriginalStrip = "";
+        PlayItemPickupSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, "Removed staged trim.");
+        return true;
+    }
+
+    private void TryBakeTrimArmor(IPlayer byPlayer)
+    {
+        if (trimArmorStack == null)
+        {
+            Notify(byPlayer, "The hemming crane has no armor.");
+            return;
+        }
+
+        if (pendingTrimRivetsStack == null)
+        {
+            Notify(byPlayer, "There is no staged trim to bake.");
+            return;
+        }
+
+        if (IsTrimValueSet(pendingTrimOriginalStrip))
+        {
+            Notify(byPlayer, "This armor already has baked rivets. Remove them with iron or better tongs before baking new rivets.");
+            return;
+        }
+
+        if (!TryConsumeTrimSolder(out string solderFailure))
+        {
+            Notify(byPlayer, solderFailure);
+            return;
+        }
+
+        pendingTrimRivetsStack = null;
+        pendingTrimOriginalStrip = "";
+        PlaySolderSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, "Welded and baked the staged trim.");
+    }
+
+    private void TryRemoveBakedTrimWithTongs(IPlayer byPlayer)
+    {
+        if (trimArmorStack == null || !TryGetFAArmorInfo(trimArmorStack, out FAArmorInfo armorInfo))
+        {
+            Notify(byPlayer, "The hemming crane has no armor.");
+            return;
+        }
+
+        ITreeAttribute? types = trimArmorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            Notify(byPlayer, "This armor piece cannot be trimmed.");
+            return;
+        }
+
+        string stripKey = "strip" + armorInfo.Piece;
+        if (pendingTrimRivetsStack != null && !IsTrimValueSet(pendingTrimOriginalStrip))
+        {
+            Notify(byPlayer, "Only staged rivets are on this armor. Use an empty hand to remove the preview.");
+            return;
+        }
+
+        string bakedStrip = IsTrimValueSet(pendingTrimOriginalStrip)
+            ? pendingTrimOriginalStrip
+            : types.GetString(stripKey, "none");
+
+        if (!IsTrimValueSet(bakedStrip))
+        {
+            Notify(byPlayer, "This armor has no baked rivets to remove.");
+            return;
+        }
+
+        ItemStack? removedRivets = CreateRimsAndRivetsStack(bakedStrip);
+        if (removedRivets == null)
+        {
+            Notify(byPlayer, $"Could not find rims and rivets item for {bakedStrip}.");
+            return;
+        }
+
+        if (pendingTrimRivetsStack != null)
+        {
+            pendingTrimOriginalStrip = "none";
+        }
+        else
+        {
+            types.SetString(stripKey, "none");
+        }
+
+        GiveOrDrop(byPlayer, removedRivets, 0.9);
+        PlayScrapeSound(byPlayer);
+        MarkStationDirty();
+        NotifyInfo(byPlayer, $"Removed {removedRivets.GetName()} from the armor.");
+    }
+
+    private void RestorePendingTrimPreview()
+    {
+        if (trimArmorStack == null || pendingTrimRivetsStack == null || !TryGetFAArmorInfo(trimArmorStack, out FAArmorInfo armorInfo))
+        {
+            return;
+        }
+
+        ITreeAttribute? types = trimArmorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            return;
+        }
+
+        types.SetString("strip" + armorInfo.Piece, string.IsNullOrEmpty(pendingTrimOriginalStrip) ? "none" : pendingTrimOriginalStrip);
     }
 
     private void TryLightFuel(IPlayer byPlayer)
@@ -1723,20 +3005,36 @@ public class BlockEntityFACoverStation : BlockEntity
 
     private MeshData? CreateTableItemMesh(ITesselatorAPI tessThreadTesselator)
     {
-        if (Api is not ICoreClientAPI capi || tableStack?.Collectible == null)
+        if (tableStack?.Collectible == null)
+        {
+            return null;
+        }
+
+        MeshData? mesh = CreateItemStackMesh(tessThreadTesselator, tableStack, "facore-coverstation-tableitem");
+        if (mesh == null)
+        {
+            return null;
+        }
+
+        AlignTableItemMesh(mesh, ShouldRotateTableItem(tableStack));
+        return mesh;
+    }
+
+    private MeshData? CreateItemStackMesh(ITesselatorAPI tessThreadTesselator, ItemStack stack, string shapeName, bool applyBlockRotation = true)
+    {
+        if (Api is not ICoreClientAPI capi || stack.Collectible == null)
         {
             return null;
         }
 
         MeshData mesh;
-        bool layFlat = ShouldRotateTableItem(tableStack);
-        if (tableStack.Item != null)
+        if (stack.Item != null)
         {
             ITexPositionSource fallbackTextureSource = capi.Tesselator.GetTextureSource(Block, 0, false);
             if (!TryResolveImmersedShapeAndTextures(
                     capi,
-                    tableStack.Item,
-                    tableStack,
+                    stack.Item,
+                    stack,
                     fallbackTextureSource,
                     out Shape? shape,
                     out ITexPositionSource textureSource,
@@ -1747,16 +3045,16 @@ public class BlockEntityFACoverStation : BlockEntity
             }
 
             tessThreadTesselator.TesselateShape(
-                "facore-coverstation-tableitem",
+                shapeName,
                 shape,
                 out mesh,
                 textureSource,
-                new Vec3f(Block.Shape.rotateX, Block.Shape.rotateY, Block.Shape.rotateZ)
+                applyBlockRotation ? new Vec3f(Block.Shape.rotateX, Block.Shape.rotateY, Block.Shape.rotateZ) : new Vec3f()
             );
         }
-        else if (tableStack.Block != null)
+        else if (stack.Block != null)
         {
-            tessThreadTesselator.TesselateBlock(tableStack.Block, out mesh);
+            tessThreadTesselator.TesselateBlock(stack.Block, out mesh);
         }
         else
         {
@@ -1769,8 +3067,722 @@ public class BlockEntityFACoverStation : BlockEntity
         }
 
         ForceOpaqueRenderPass(mesh);
-        AlignTableItemMesh(mesh, layFlat);
         return mesh;
+    }
+
+    private void AddDecorationStationMeshes(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
+    {
+        List<StationElementZone> zones = StationShapeElementReader.LoadElementZones(Api, Block);
+
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "CupboardSlot1", decorationKitHeadStack, scaleFactor: DecorationShelfItemScale, yawDegrees: DecorationShelfItemYawDegrees);
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "CupboardSlot2", ornamentsStack, scaleFactor: DecorationShelfItemScale, yawDegrees: DecorationShelfItemYawDegrees);
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "CupboardSlot3", decorationKitBodyStack, scaleFactor: DecorationShelfItemScale, yawDegrees: DecorationShelfItemYawDegrees);
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "CupboardSlot4", bracketsStack, scaleFactor: DecorationShelfItemScale, yawDegrees: DecorationShelfItemYawDegrees);
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "CupboardSlot5", decorationKitLegsStack, scaleFactor: DecorationShelfItemScale, yawDegrees: DecorationShelfItemYawDegrees);
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "CupboardSlot6", fastenersStack, scaleFactor: DecorationShelfItemScale, yawDegrees: DecorationShelfItemYawDegrees);
+
+        AddArmorStandMeshes(mesher, tessThreadTesselator, zones);
+        AddDecorationClothMeshes(mesher, tessThreadTesselator, zones);
+    }
+
+    private void AddDecorationClothMeshes(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator, List<StationElementZone> zones)
+    {
+        if (decorationClothStacks.Count == 0 || !TryGetDecorationZoneBox(zones, "MordantLinenStack", out Cuboidf zoneBox))
+        {
+            return;
+        }
+
+        int visibleClothStacks = Math.Min(DecorationVisibleClothStacks, decorationClothStacks.Count);
+        for (int i = 0; i < visibleClothStacks; i++)
+        {
+            ItemStack clothStack = decorationClothStacks[i];
+            MeshData? mesh;
+            try
+            {
+                mesh = CreateItemStackMesh(
+                    tessThreadTesselator,
+                    clothStack,
+                    $"facore-decorationstation-cloth-{i}"
+                );
+            }
+            catch (Exception exception)
+            {
+                Api?.Logger.Warning("[FACore DecorationStation] Could not render cloth {0}: {1}", FormatStackDebug(clothStack), exception);
+                continue;
+            }
+
+            if (mesh == null)
+            {
+                continue;
+            }
+
+            ApplyGroundTransformOrientation(mesh, clothStack.Collectible.GroundTransform);
+            AlignDecorationClothMesh(mesh, zoneBox, i);
+            mesher.AddMeshData(mesh, 1);
+        }
+    }
+
+    private void AddTrimStationMeshes(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
+    {
+        List<StationElementZone> zones = StationShapeElementReader.LoadElementZones(Api, Block);
+
+        if (trimArmorStack != null)
+        {
+            AddArmorStandMeshes(
+                mesher,
+                tessThreadTesselator,
+                zones,
+                [trimArmorStack],
+                ["Armor"],
+                "facore-trimstation-armor",
+                value => trimArmorRenderDebug = value,
+                TrimArmorExtraDropY,
+                TrimArmorScale,
+                centerLateralToTarget: true
+            );
+        }
+        else
+        {
+            trimArmorRenderDebug = "no armor";
+        }
+
+        ItemStack? visibleRivets = pendingTrimRivetsStack ?? trimRivetsStack;
+        TrimDebugLog($"Render RivetsPlace stack={FormatStackDebug(visibleRivets)} scale={TrimRivetsBowlItemScale}");
+        AddDecorationSlotMesh(mesher, tessThreadTesselator, zones, "RivetsPlace", visibleRivets, scaleFactor: TrimRivetsBowlItemScale);
+        AddDecorationSlotMesh(
+            mesher,
+            tessThreadTesselator,
+            zones,
+            "CruciblePlace",
+            trimCrucibleStack,
+            yOffset: TrimCrucibleItemYOffset,
+            scaleFactor: TrimCrucibleItemScale,
+            yawDegrees: TrimCrucibleItemYawDegrees
+        );
+        AddSolderingIronHolderMesh(mesher, tessThreadTesselator, zones);
+    }
+
+    private void AddSolderingIronHolderMesh(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator, List<StationElementZone> zones)
+    {
+        if (trimSolderingIronStack?.Collectible == null || !TryGetDecorationZoneBox(zones, "SolderHolder", out Cuboidf zoneBox))
+        {
+            return;
+        }
+
+        MeshData? mesh;
+        try
+        {
+            mesh = CreateItemStackMesh(tessThreadTesselator, trimSolderingIronStack, "facore-trimstation-solderholder");
+        }
+        catch (Exception exception)
+        {
+            Api?.Logger.Warning("[FACore TrimStation] Could not render soldering iron holder item {0}: {1}", FormatStackDebug(trimSolderingIronStack), exception);
+            return;
+        }
+
+        if (mesh == null)
+        {
+            return;
+        }
+
+        ApplyGroundTransformOrientation(mesh, trimSolderingIronStack.Collectible.GroundTransform);
+        AlignVerticalHolderMesh(mesh, zoneBox, TrimSolderingIronItemScale);
+        mesher.AddMeshData(mesh, 1);
+    }
+
+    private void AddDecorationSlotMesh(
+        ITerrainMeshPool mesher,
+        ITesselatorAPI tessThreadTesselator,
+        List<StationElementZone> zones,
+        string actionName,
+        ItemStack? stack,
+        float yOffset = 0f,
+        float scaleFactor = 1f,
+        float yawDegrees = 0f)
+    {
+        if (stack?.Collectible == null || !TryGetDecorationZoneBox(zones, actionName, out Cuboidf zoneBox))
+        {
+            return;
+        }
+
+        MeshData? mesh;
+        try
+        {
+            mesh = CreateItemStackMesh(
+                tessThreadTesselator,
+                stack,
+                "facore-decorationstation-" + actionName.ToLowerInvariant()
+            );
+        }
+        catch (Exception exception)
+        {
+            Api?.Logger.Warning("[FACore DecorationStation] Could not render {0} in {1}: {2}", FormatStackDebug(stack), actionName, exception);
+            return;
+        }
+
+        if (mesh == null)
+        {
+            return;
+        }
+
+        ApplyGroundTransformOrientation(mesh, stack.Collectible.GroundTransform);
+        AlignDecorationSlotMesh(mesh, zoneBox, yOffset, scaleFactor, yawDegrees);
+        mesher.AddMeshData(mesh, 1);
+    }
+
+    private static void ApplyGroundTransformOrientation(MeshData mesh, ModelTransform? transform)
+    {
+        if (transform == null)
+        {
+            return;
+        }
+
+        var origin = new Vec3f(transform.Origin.X, transform.Origin.Y, transform.Origin.Z);
+        mesh.Rotate(
+            origin,
+            transform.Rotation.X * GameMath.DEG2RAD,
+            transform.Rotation.Y * GameMath.DEG2RAD,
+            transform.Rotation.Z * GameMath.DEG2RAD
+        );
+    }
+
+    private static bool TryGetDecorationZoneBox(List<StationElementZone> zones, string actionName, out Cuboidf zoneBox)
+    {
+        foreach (StationElementZone zone in zones)
+        {
+            if (zone.ActionName == actionName)
+            {
+                zoneBox = zone.StationBox;
+                return true;
+            }
+        }
+
+        zoneBox = Cuboidf.Default();
+        return false;
+    }
+
+    private void AlignDecorationSlotMesh(MeshData mesh, Cuboidf zoneBox, float yOffset, float scaleFactor = 1f, float yawDegrees = 0f)
+    {
+        if (!TryGetMeshBounds(mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ))
+        {
+            return;
+        }
+
+        if (scaleFactor > 0f && Math.Abs(scaleFactor - 1f) > 0.001f)
+        {
+            var scaleOrigin = new Vec3f((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
+            mesh.Scale(scaleOrigin, scaleFactor, scaleFactor, scaleFactor);
+
+            if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+            {
+                return;
+            }
+        }
+
+        // Yaw each item so longer pieces sit diagonally and don't clip into neighbouring slots.
+        if (Math.Abs(yawDegrees) > 0.001f)
+        {
+            var yawOrigin = new Vec3f((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
+            mesh.Rotate(yawOrigin, 0f, yawDegrees * GameMath.DEG2RAD, 0f);
+
+            if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+            {
+                return;
+            }
+        }
+
+        // Rest the item on the bottom of its selection box (shelf surface) instead of floating it centered.
+        float currentCenterX = (minX + maxX) * 0.5f;
+        float currentCenterZ = (minZ + maxZ) * 0.5f;
+        float targetCenterX = (zoneBox.X1 + zoneBox.X2) * 0.5f;
+        float targetCenterZ = (zoneBox.Z1 + zoneBox.Z2) * 0.5f;
+        float targetBottomY = zoneBox.Y1 + yOffset;
+
+        mesh.Translate(
+            targetCenterX - currentCenterX,
+            targetBottomY - minY,
+            targetCenterZ - currentCenterZ
+        );
+    }
+
+    private static void AlignVerticalHolderMesh(MeshData mesh, Cuboidf zoneBox, float scaleFactor)
+    {
+        if (!TryGetMeshBounds(mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ))
+        {
+            return;
+        }
+
+        var rotateOrigin = new Vec3f((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
+        float sizeX = maxX - minX;
+        float sizeZ = maxZ - minZ;
+        if (sizeX >= sizeZ)
+        {
+            mesh.Rotate(rotateOrigin, 0f, 0f, GameMath.PIHALF);
+        }
+        else
+        {
+            mesh.Rotate(rotateOrigin, GameMath.PIHALF, 0f, 0f);
+        }
+
+        if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+        {
+            return;
+        }
+
+        float height = maxY - minY;
+        float targetHeight = Math.Max(0.01f, (zoneBox.Y2 - zoneBox.Y1) * 0.9f);
+        float fitScale = height > targetHeight ? targetHeight / height : 1f;
+        float finalScale = Math.Min(scaleFactor, fitScale);
+        if (finalScale > 0f && Math.Abs(finalScale - 1f) > 0.001f)
+        {
+            var scaleOrigin = new Vec3f((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, (minZ + maxZ) * 0.5f);
+            mesh.Scale(scaleOrigin, finalScale, finalScale, finalScale);
+
+            if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+            {
+                return;
+            }
+        }
+
+        float currentCenterX = (minX + maxX) * 0.5f;
+        float currentCenterY = (minY + maxY) * 0.5f;
+        float currentCenterZ = (minZ + maxZ) * 0.5f;
+        float targetCenterX = (zoneBox.X1 + zoneBox.X2) * 0.5f;
+        float targetCenterY = (zoneBox.Y1 + zoneBox.Y2) * 0.5f;
+        float targetCenterZ = (zoneBox.Z1 + zoneBox.Z2) * 0.5f;
+
+        mesh.Translate(
+            targetCenterX - currentCenterX,
+            targetCenterY - currentCenterY,
+            targetCenterZ - currentCenterZ
+        );
+    }
+
+    private void AlignDecorationClothMesh(MeshData mesh, Cuboidf zoneBox, int layer)
+    {
+        if (!TryGetMeshBounds(mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ))
+        {
+            return;
+        }
+
+        var scaleOrigin = new Vec3f((minX + maxX) * 0.5f, minY, (minZ + maxZ) * 0.5f);
+        mesh.Scale(scaleOrigin, DecorationClothStackScale, DecorationClothStackScale, DecorationClothStackScale);
+
+        if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+        {
+            return;
+        }
+
+        float yawDegrees = layer switch
+        {
+            1 => 7f,
+            2 => -8f,
+            3 => 13f,
+            4 => -14f,
+            5 => 4f,
+            _ => 0f
+        };
+
+        if (Math.Abs(yawDegrees) > 0.001f)
+        {
+            var yawOrigin = new Vec3f((minX + maxX) * 0.5f, minY, (minZ + maxZ) * 0.5f);
+            mesh.Rotate(yawOrigin, 0f, yawDegrees * GameMath.DEG2RAD, 0f);
+
+            if (!TryGetMeshBounds(mesh, out minX, out minY, out minZ, out maxX, out maxY, out maxZ))
+            {
+                return;
+            }
+        }
+
+        (float offsetX, float offsetZ) = layer switch
+        {
+            1 => (0.008f, -0.006f),
+            2 => (-0.007f, 0.007f),
+            3 => (0.006f, 0.009f),
+            4 => (-0.009f, -0.004f),
+            5 => (0.004f, -0.009f),
+            _ => (0f, 0f)
+        };
+
+        float currentCenterX = (minX + maxX) * 0.5f;
+        float currentCenterZ = (minZ + maxZ) * 0.5f;
+        float targetCenterX = (zoneBox.X1 + zoneBox.X2) * 0.5f + offsetX;
+        float targetCenterZ = (zoneBox.Z1 + zoneBox.Z2) * 0.5f + offsetZ;
+        float targetBottomY = zoneBox.Y1 + layer * DecorationClothLayerYOffset;
+
+        mesh.Translate(
+            targetCenterX - currentCenterX,
+            targetBottomY - minY,
+            targetCenterZ - currentCenterZ
+        );
+    }
+
+    private void AddArmorStandMeshes(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator, List<StationElementZone> zones)
+    {
+        var pieces = new List<ItemStack>();
+        if (decorationHelmetStack != null) pieces.Add(decorationHelmetStack);
+        if (decorationBodyStack != null) pieces.Add(decorationBodyStack);
+        if (decorationLegsStack != null) pieces.Add(decorationLegsStack);
+        AddArmorStandMeshes(mesher, tessThreadTesselator, zones, pieces, ["HelmetDeco", "BodyDeco", "LegsDeco"], "facore-decorationstation-armorstand", value => armorStandRenderDebug = value);
+    }
+
+    private void AddArmorStandMeshes(
+        ITerrainMeshPool mesher,
+        ITesselatorAPI tessThreadTesselator,
+        List<StationElementZone> zones,
+        List<ItemStack> pieces,
+        string[] targetZoneNames,
+        string shapeName,
+        Action<string> setRenderDebug,
+        float extraDropY = 0f,
+        float armorScale = 1f,
+        bool centerLateralToTarget = false)
+    {
+        if (Api is not ICoreClientAPI capi)
+        {
+            return;
+        }
+
+        if (pieces.Count == 0)
+        {
+            setRenderDebug("no pieces");
+            return;
+        }
+
+        Shape? standShape = Shape.TryGet(Api, ArmorStandShapeLocation)?.Clone();
+        if (standShape == null)
+        {
+            setRenderDebug("BASE SHAPE NOT FOUND");
+            Api?.Logger.Warning("[FACore ArmorStand] Base shape not found: {0}", ArmorStandShapeLocation);
+            return;
+        }
+
+        // The vanilla armor stand shape carries both the wooden stand and a seraph skeleton; keep only the
+        // seraph joints (the decoration station draws its own stand) so the armor frames cleanly.
+        KeepOnlySeraphJoints(standShape);
+        standShape.ResolveReferences(Api.Logger, ArmorStandShapeLocation.ToShortString());
+        if (!TryGetArmorStandFrameBounds(tessThreadTesselator, capi, standShape, out MeshBounds frameBounds, out MeshData frameMesh))
+        {
+            setRenderDebug("BASE FRAME EMPTY");
+            Api?.Logger.Warning("[FACore ArmorStand] Base frame tesselated empty: {0}", ArmorStandShapeLocation);
+            return;
+        }
+
+        var armorTextures = new Dictionary<string, CompositeTexture>(StringComparer.Ordinal);
+        foreach (string hiddenCode in ArmorStandHiddenTextureCodes)
+        {
+            armorTextures[hiddenCode] = TransparentComposite();
+        }
+
+        int mergedCount = 0;
+        foreach (ItemStack stack in pieces)
+        {
+            if (TryMergeArmorStandPiece(capi, stack, standShape, armorTextures))
+            {
+                mergedCount++;
+            }
+        }
+
+        if (mergedCount == 0)
+        {
+            setRenderDebug($"{pieces.Count} stored, 0 merged");
+            Api?.Logger.Notification("[FACore ArmorStand] {0} piece(s) stored but none merged onto the stand.", pieces.Count);
+            return;
+        }
+
+        ITexPositionSource fallback = capi.Tesselator.GetTextureSource(Block, 0, false);
+        var textureSource = new CompositeBlockAtlasTextureSource(capi, new TransparentTextureSource(capi, fallback.AtlasSize), armorTextures);
+
+        try
+        {
+            tessThreadTesselator.TesselateShape(
+                shapeName,
+                standShape,
+                out MeshData mesh,
+                textureSource,
+                new Vec3f()
+            );
+
+            if (mesh == null || mesh.VerticesCount <= 0)
+            {
+                setRenderDebug($"merged={mergedCount}, EMPTY MESH");
+                Api?.Logger.Notification("[FACore ArmorStand] Tesselated mesh was empty (merged={0}).", mergedCount);
+                return;
+            }
+
+            ForceOpaqueRenderPass(mesh);
+            string preBounds = FormatMeshBounds(mesh);
+            Api?.Logger.Notification("[FACore ArmorStand] merged={0}, meshVerts={1}, bounds={2}, frameBounds={3}", mergedCount, mesh.VerticesCount, preBounds, frameBounds);
+            AlignArmorStandMesh(mesh, zones, frameBounds, frameMesh, targetZoneNames, extraDropY, armorScale, centerLateralToTarget);
+            mesher.AddMeshData(mesh, 1);
+            setRenderDebug($"merged={mergedCount} verts={mesh.VerticesCount} placed={FormatMeshBounds(mesh)}");
+        }
+        catch (Exception exception)
+        {
+            setRenderDebug("EXCEPTION: " + exception.Message);
+            Api?.Logger.Warning("[FACore ArmorStand] Could not render armor stand: {0}", exception);
+        }
+    }
+
+    private bool TryGetArmorStandFrameBounds(ITesselatorAPI tessThreadTesselator, ICoreClientAPI capi, Shape standShape, out MeshBounds bounds, out MeshData frameMesh)
+    {
+        bounds = default;
+        frameMesh = null!;
+
+        ITexPositionSource fallback = capi.Tesselator.GetTextureSource(Block, 0, false);
+        var textureSource = new TransparentTextureSource(capi, fallback.AtlasSize);
+
+        tessThreadTesselator.TesselateShape(
+            "facore-decorationstation-armorstand-frame",
+            standShape,
+            out frameMesh,
+            textureSource,
+            new Vec3f()
+        );
+
+        return TryGetMeshBounds(frameMesh, out bounds);
+    }
+
+    private static void KeepOnlySeraphJoints(Shape standShape)
+    {
+        ShapeElement[]? roots = standShape.Elements;
+        if (roots == null)
+        {
+            return;
+        }
+
+        foreach (ShapeElement root in roots)
+        {
+            if (root.Children == null)
+            {
+                continue;
+            }
+
+            var kept = new List<ShapeElement>();
+            foreach (ShapeElement child in root.Children)
+            {
+                if (child.Name == "LowerTorso")
+                {
+                    kept.Add(child);
+                }
+            }
+
+            if (kept.Count > 0 && kept.Count != root.Children.Length)
+            {
+                root.Children = kept.ToArray();
+            }
+        }
+    }
+
+    private bool TryMergeArmorStandPiece(ICoreClientAPI capi, ItemStack stack, Shape standShape, Dictionary<string, CompositeTexture> armorTextures)
+    {
+        if (!TryGetFAArmorInfo(stack, out FAArmorInfo armorInfo))
+        {
+            return false;
+        }
+
+        ITreeAttribute? types = stack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            return false;
+        }
+
+        string piece = armorInfo.Piece;
+        string decoration = types.GetString("decoration" + piece, "none");
+        string coverMetal = types.GetString("cover" + piece, "none");
+        string stripMetal = types.GetString("strip" + piece, "none");
+        string color = types.GetString("color" + piece, "none");
+
+        if (!TryResolveFAArmorShape(armorInfo, decoration, types.GetString("form" + piece, "") ?? "", out Shape? armorShape, out AssetLocation shapeLocation)
+            || armorShape == null)
+        {
+            return false;
+        }
+
+        if (!TryResolveFAArmorPlateTexture(armorInfo, coverMetal, out AssetLocation plateTexture))
+        {
+            return false;
+        }
+
+        armorTextures["base" + piece] = new CompositeTexture(plateTexture) { Alpha = 255 };
+        armorTextures["strip" + piece] = new CompositeTexture(new AssetLocation("facore", $"armor/entity/trim/{stripMetal}")) { Alpha = 255 };
+        armorTextures["color" + piece] = GetFAArmorDecorationTexture(piece, decoration, color);
+
+        // Reparent the worn-armor entity shape onto the vanilla armor stand's seraph joints so the
+        // pieces assemble into a standing figure instead of piling up at the origin. Mirror the engine's
+        // gear-attach recipe (VSEssentials addGearToShape): subclass + resolve the child before merging,
+        // otherwise its faces never resolve and it tesselates to nothing.
+        Shape childShape = armorShape.Clone();
+        bool merged;
+        try
+        {
+            childShape.SubclassForStepParenting("", 0f);
+            childShape.ResolveReferences(Api.Logger, shapeLocation.ToShortString());
+            merged = standShape.StepParentShape(
+                childShape,
+                shapeLocation.ToShortString(),
+                ArmorStandShapeLocation.ToShortString(),
+                Api.Logger,
+                (textureCode, textureLocation) =>
+                {
+                    if (!armorTextures.ContainsKey(textureCode))
+                    {
+                        armorTextures[textureCode] = new CompositeTexture(textureLocation) { Alpha = 255 };
+                    }
+                }
+            );
+        }
+        catch (Exception exception)
+        {
+            Api?.Logger.Warning("[FACore ArmorStand] StepParentShape failed for {0} ({1}): {2}", piece, shapeLocation, exception);
+            return false;
+        }
+
+        Api?.Logger.Notification("[FACore ArmorStand] merge piece={0} shape={1} stepParented={2}", piece, shapeLocation, merged);
+        return merged;
+    }
+
+    private void AlignArmorStandMesh(
+        MeshData mesh,
+        List<StationElementZone> zones,
+        MeshBounds frameBounds,
+        MeshData frameMesh,
+        string[] targetZoneNames,
+        float extraDropY,
+        float armorScale,
+        bool centerLateralToTarget)
+    {
+        if (!frameBounds.IsValid)
+        {
+            return;
+        }
+
+        if (!TryGetArmorStandTargetRegion(zones, targetZoneNames, out float targetCenterX, out float targetCenterZ, out float targetBottomY, out float targetTopY))
+        {
+            Api?.Logger.Notification("[FACore ArmorStand] No target zones found ({0}); skipping placement.", string.Join(",", targetZoneNames));
+            return;
+        }
+
+        Api?.Logger.Notification("[FACore ArmorStand] target center=({0:0.##},{1:0.##}) y={2:0.##}..{3:0.##} side={4}; frameBounds={5}; figureBounds={6}", targetCenterX, targetCenterZ, targetBottomY, targetTopY, GetStationSideCode(), frameBounds, FormatMeshBounds(mesh));
+
+        var origin = new Vec3f(frameBounds.CenterX, frameBounds.CenterY, frameBounds.CenterZ);
+
+        if (armorScale > 0f && Math.Abs(armorScale - 1f) > 0.001f)
+        {
+            mesh.Scale(origin, armorScale, armorScale, armorScale);
+            frameMesh.Scale(origin, armorScale, armorScale, armorScale);
+        }
+
+        mesh.Rotate(origin, 0f, GetArmorStandFacingRadians(), 0f);
+        frameMesh.Rotate(origin, 0f, GetArmorStandFacingRadians(), 0f);
+        if (!TryGetMeshBounds(frameMesh, out MeshBounds transformedFrameBounds))
+        {
+            return;
+        }
+
+        if (!TryGetMeshBounds(mesh, out MeshBounds transformedMeshBounds))
+        {
+            return;
+        }
+
+        (float proxyOffsetX, float proxyOffsetZ) = GetArmorStandProxyNudge();
+        (float forwardOffsetX, float forwardOffsetZ) = GetArmorStandForwardNudge();
+        float placementCenterX = proxyOffsetX == 0f ? 0.5f : targetCenterX + proxyOffsetX;
+        float placementCenterZ = proxyOffsetZ == 0f ? 0.5f : targetCenterZ + proxyOffsetZ;
+        float translateX = placementCenterX + forwardOffsetX - transformedFrameBounds.CenterX;
+        float translateZ = placementCenterZ + forwardOffsetZ - transformedFrameBounds.CenterZ;
+        if (centerLateralToTarget)
+        {
+            if (Math.Abs(forwardOffsetX) > Math.Abs(forwardOffsetZ))
+            {
+                translateZ = targetCenterZ - transformedMeshBounds.CenterZ;
+            }
+            else
+            {
+                translateX = targetCenterX - transformedMeshBounds.CenterX;
+            }
+        }
+
+        mesh.Translate(translateX, targetBottomY - ArmorStandDropY - extraDropY - transformedFrameBounds.MinY, translateZ);
+    }
+
+    private static bool TryGetArmorStandTargetRegion(List<StationElementZone> zones, string[] targetZoneNames, out float centerX, out float centerZ, out float bottomY, out float topY)
+    {
+        centerX = centerZ = bottomY = topY = 0f;
+
+        float minY = float.MaxValue;
+        float maxY = float.MinValue;
+        bool any = false;
+
+        foreach (string name in targetZoneNames)
+        {
+            if (!TryGetDecorationZoneBox(zones, name, out Cuboidf box))
+            {
+                continue;
+            }
+
+            any = true;
+            minY = Math.Min(minY, box.Y1);
+            maxY = Math.Max(maxY, box.Y2);
+        }
+
+        if (!any)
+        {
+            return false;
+        }
+
+        // Anchor the standing figure horizontally on the legs/feet marker (the standing axis) so the bulky
+        // chest zone doesn't drag it sideways. Fall back to body, then helmet.
+        Cuboidf anchor;
+        if (Array.IndexOf(targetZoneNames, "LegsDeco") >= 0 && TryGetDecorationZoneBox(zones, "LegsDeco", out Cuboidf legs)) anchor = legs;
+        else if (Array.IndexOf(targetZoneNames, "BodyDeco") >= 0 && TryGetDecorationZoneBox(zones, "BodyDeco", out Cuboidf body)) anchor = body;
+        else _ = TryGetDecorationZoneBox(zones, targetZoneNames[0], out anchor);
+
+        centerX = (anchor.X1 + anchor.X2) * 0.5f;
+        centerZ = (anchor.Z1 + anchor.Z2) * 0.5f;
+        bottomY = minY;
+        topY = maxY;
+        return true;
+    }
+
+    private float GetArmorStandFacingRadians()
+    {
+        int quarterTurns = GetStationSideCode() switch
+        {
+            "east" => 1,
+            "south" => 2,
+            "west" => 3,
+            _ => 0
+        };
+
+        return ArmorStandBaseFacingRadians + quarterTurns * GameMath.PIHALF;
+    }
+
+    private (float X, float Z) GetArmorStandProxyNudge()
+    {
+        return GetStationSideCode() switch
+        {
+            "east" => (0f, ArmorStandPushFromMain),
+            "south" => (-ArmorStandPushFromMain, 0f),
+            "west" => (0f, -ArmorStandPushFromMain),
+            _ => (ArmorStandPushFromMain, 0f)
+        };
+    }
+
+    private (float X, float Z) GetArmorStandForwardNudge()
+    {
+        return GetStationSideCode() switch
+        {
+            "east" => (ArmorStandForwardNudge, 0f),
+            "south" => (0f, ArmorStandForwardNudge),
+            "west" => (-ArmorStandForwardNudge, 0f),
+            _ => (0f, -ArmorStandForwardNudge)
+        };
+    }
+
+    private static CompositeTexture TransparentComposite()
+    {
+        return new CompositeTexture(TransparentTextureLocation) { Alpha = 0 };
     }
 
     private static bool ShouldRotateTableItem(ItemStack stack)
@@ -2093,7 +4105,8 @@ public class BlockEntityFACoverStation : BlockEntity
             return new CompositeTexture(new AssetLocation("facore", $"armor/entity/bear/{color}")) { Alpha = 255 };
         }
 
-        return new CompositeTexture(new AssetLocation("facore", $"block/decorations/{piece}/{color}")) { Alpha = 255 };
+        string textureColor = decoration != "none" && color == "none" ? "plain" : color;
+        return new CompositeTexture(new AssetLocation("facore", $"block/decorations/{piece}/{textureColor}")) { Alpha = 255 };
     }
 
     private void AlignTableItemMesh(MeshData mesh, bool layFlat)
@@ -2396,6 +4409,18 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         return $"[{minX:0.###},{minY:0.###},{minZ:0.###}]..[{maxX:0.###},{maxY:0.###},{maxZ:0.###}]";
     }
 
+    private static bool TryGetMeshBounds(MeshData mesh, out MeshBounds bounds)
+    {
+        bounds = default;
+        if (!TryGetMeshBounds(mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ))
+        {
+            return false;
+        }
+
+        bounds = new MeshBounds(minX, minY, minZ, maxX, maxY, maxZ);
+        return true;
+    }
+
     private static bool TryGetMeshBounds(MeshData mesh, out float minX, out float minY, out float minZ, out float maxX, out float maxY, out float maxZ)
     {
         minX = minY = minZ = 0f;
@@ -2576,6 +4601,946 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         return null;
     }
 
+    private void WriteDecorationTreeAttributes(ITreeAttribute tree)
+    {
+        SetOrRemoveItemstack(tree, "decorationKitHeadStack", decorationKitHeadStack);
+        SetOrRemoveItemstack(tree, "ornamentsStack", ornamentsStack);
+        SetOrRemoveItemstack(tree, "decorationKitBodyStack", decorationKitBodyStack);
+        SetOrRemoveItemstack(tree, "bracketsStack", bracketsStack);
+        SetOrRemoveItemstack(tree, "decorationKitLegsStack", decorationKitLegsStack);
+        SetOrRemoveItemstack(tree, "fastenersStack", fastenersStack);
+        SetOrRemoveItemstack(tree, "decorationHelmetStack", decorationHelmetStack);
+        SetOrRemoveItemstack(tree, "decorationBodyStack", decorationBodyStack);
+        SetOrRemoveItemstack(tree, "decorationLegsStack", decorationLegsStack);
+        SetOrRemoveItemstack(tree, "pendingHeadDecorationStack", pendingHeadDecorationStack);
+        SetOrRemoveItemstack(tree, "pendingHeadColorStack", pendingHeadColorStack);
+        SetOrRemoveItemstack(tree, "pendingBodyDecorationStack", pendingBodyDecorationStack);
+        SetOrRemoveItemstack(tree, "pendingBodyColorStack", pendingBodyColorStack);
+        SetOrRemoveItemstack(tree, "pendingLegsDecorationStack", pendingLegsDecorationStack);
+        SetOrRemoveItemstack(tree, "pendingLegsColorStack", pendingLegsColorStack);
+        SetOrRemoveString(tree, "pendingHeadOriginalDecoration", pendingHeadOriginalDecoration);
+        SetOrRemoveString(tree, "pendingHeadOriginalColor", pendingHeadOriginalColor);
+        SetOrRemoveString(tree, "pendingBodyOriginalDecoration", pendingBodyOriginalDecoration);
+        SetOrRemoveString(tree, "pendingBodyOriginalColor", pendingBodyOriginalColor);
+        SetOrRemoveString(tree, "pendingLegsOriginalDecoration", pendingLegsOriginalDecoration);
+        SetOrRemoveString(tree, "pendingLegsOriginalColor", pendingLegsOriginalColor);
+
+        for (int i = 0; i < DecorationClothCapacity; i++)
+        {
+            ItemStack? clothStack = i < decorationClothStacks.Count ? decorationClothStacks[i] : null;
+            SetOrRemoveItemstack(tree, $"decorationClothStack{i}", clothStack);
+        }
+    }
+
+    private void ReadDecorationTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
+    {
+        decorationKitHeadStack = ResolveItemstack(tree.GetItemstack("decorationKitHeadStack"), worldForResolving);
+        ornamentsStack = ResolveItemstack(tree.GetItemstack("ornamentsStack"), worldForResolving);
+        decorationKitBodyStack = ResolveItemstack(tree.GetItemstack("decorationKitBodyStack"), worldForResolving);
+        bracketsStack = ResolveItemstack(tree.GetItemstack("bracketsStack"), worldForResolving);
+        decorationKitLegsStack = ResolveItemstack(tree.GetItemstack("decorationKitLegsStack"), worldForResolving);
+        fastenersStack = ResolveItemstack(tree.GetItemstack("fastenersStack"), worldForResolving);
+        decorationHelmetStack = ResolveItemstack(tree.GetItemstack("decorationHelmetStack"), worldForResolving);
+        decorationBodyStack = ResolveItemstack(tree.GetItemstack("decorationBodyStack"), worldForResolving);
+        decorationLegsStack = ResolveItemstack(tree.GetItemstack("decorationLegsStack"), worldForResolving);
+        pendingHeadDecorationStack = ResolveItemstack(tree.GetItemstack("pendingHeadDecorationStack"), worldForResolving);
+        pendingHeadColorStack = ResolveItemstack(tree.GetItemstack("pendingHeadColorStack"), worldForResolving);
+        pendingBodyDecorationStack = ResolveItemstack(tree.GetItemstack("pendingBodyDecorationStack"), worldForResolving);
+        pendingBodyColorStack = ResolveItemstack(tree.GetItemstack("pendingBodyColorStack"), worldForResolving);
+        pendingLegsDecorationStack = ResolveItemstack(tree.GetItemstack("pendingLegsDecorationStack"), worldForResolving);
+        pendingLegsColorStack = ResolveItemstack(tree.GetItemstack("pendingLegsColorStack"), worldForResolving);
+        pendingHeadOriginalDecoration = tree.GetString("pendingHeadOriginalDecoration") ?? "";
+        pendingHeadOriginalColor = tree.GetString("pendingHeadOriginalColor") ?? "";
+        pendingBodyOriginalDecoration = tree.GetString("pendingBodyOriginalDecoration") ?? "";
+        pendingBodyOriginalColor = tree.GetString("pendingBodyOriginalColor") ?? "";
+        pendingLegsOriginalDecoration = tree.GetString("pendingLegsOriginalDecoration") ?? "";
+        pendingLegsOriginalColor = tree.GetString("pendingLegsOriginalColor") ?? "";
+
+        decorationClothStacks.Clear();
+        for (int i = 0; i < DecorationClothCapacity; i++)
+        {
+            ItemStack? clothStack = ResolveItemstack(tree.GetItemstack($"decorationClothStack{i}"), worldForResolving);
+            if (clothStack != null)
+            {
+                decorationClothStacks.Add(clothStack);
+            }
+        }
+    }
+
+    private void DropDecorationInventory()
+    {
+        RestoreAllPendingDecorationPreviews();
+        DropDecorationStack(ref pendingHeadDecorationStack);
+        DropDecorationStack(ref pendingHeadColorStack);
+        DropDecorationStack(ref pendingBodyDecorationStack);
+        DropDecorationStack(ref pendingBodyColorStack);
+        DropDecorationStack(ref pendingLegsDecorationStack);
+        DropDecorationStack(ref pendingLegsColorStack);
+        DropDecorationStack(ref decorationKitHeadStack);
+        DropDecorationStack(ref ornamentsStack);
+        DropDecorationStack(ref decorationKitBodyStack);
+        DropDecorationStack(ref bracketsStack);
+        DropDecorationStack(ref decorationKitLegsStack);
+        DropDecorationStack(ref fastenersStack);
+        DropDecorationStack(ref decorationHelmetStack);
+        DropDecorationStack(ref decorationBodyStack);
+        DropDecorationStack(ref decorationLegsStack);
+
+        foreach (ItemStack clothStack in decorationClothStacks)
+        {
+            Api.World.SpawnItemEntity(clothStack, Pos.ToVec3d().Add(0.5, 0.8, 0.5));
+        }
+
+        decorationClothStacks.Clear();
+    }
+
+    private void DropDecorationStack(ref ItemStack? stack)
+    {
+        if (stack == null)
+        {
+            return;
+        }
+
+        Api.World.SpawnItemEntity(stack, Pos.ToVec3d().Add(0.5, 0.8, 0.5));
+        stack = null;
+    }
+
+    private void WriteTrimTreeAttributes(ITreeAttribute tree)
+    {
+        SetOrRemoveItemstack(tree, "trimArmorStack", trimArmorStack);
+        SetOrRemoveItemstack(tree, "trimRivetsStack", trimRivetsStack);
+        SetOrRemoveItemstack(tree, "trimCrucibleStack", trimCrucibleStack);
+        SetOrRemoveItemstack(tree, "trimSolderingIronStack", trimSolderingIronStack);
+        SetOrRemoveItemstack(tree, "pendingTrimRivetsStack", pendingTrimRivetsStack);
+        SetOrRemoveString(tree, "pendingTrimOriginalStrip", pendingTrimOriginalStrip);
+    }
+
+    private void ReadTrimTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
+    {
+        trimArmorStack = ResolveItemstack(tree.GetItemstack("trimArmorStack"), worldForResolving);
+        trimRivetsStack = ResolveItemstack(tree.GetItemstack("trimRivetsStack"), worldForResolving);
+        trimCrucibleStack = ResolveItemstack(tree.GetItemstack("trimCrucibleStack"), worldForResolving);
+        trimSolderingIronStack = ResolveItemstack(tree.GetItemstack("trimSolderingIronStack"), worldForResolving);
+        pendingTrimRivetsStack = ResolveItemstack(tree.GetItemstack("pendingTrimRivetsStack"), worldForResolving);
+        pendingTrimOriginalStrip = tree.GetString("pendingTrimOriginalStrip") ?? "";
+    }
+
+    private void DropTrimInventory()
+    {
+        RestorePendingTrimPreview();
+        DropDecorationStack(ref pendingTrimRivetsStack);
+        DropDecorationStack(ref trimRivetsStack);
+        DropDecorationStack(ref trimCrucibleStack);
+        DropDecorationStack(ref trimSolderingIronStack);
+        DropDecorationStack(ref trimArmorStack);
+        pendingTrimOriginalStrip = "";
+    }
+
+    private void AppendTrimStationDisplayInfo(StringBuilder builder)
+    {
+        AppendDecorationLine(builder, "Armor", trimArmorStack);
+        AppendDecorationLine(builder, "Rims and rivets", trimRivetsStack);
+        AppendDecorationLine(builder, "Solder crucible", trimCrucibleStack);
+        AppendDecorationLine(builder, "Soldering iron", trimSolderingIronStack);
+        AppendDecorationLine(builder, "Staged trim", pendingTrimRivetsStack);
+
+        if (Api?.Side == EnumAppSide.Client)
+        {
+            if (builder.Length > 0)
+            {
+                builder.AppendLine();
+            }
+
+            builder.Append("[trim armor: ");
+            builder.Append(trimArmorRenderDebug);
+            builder.Append("]");
+        }
+    }
+
+    private void AppendDecorationStationDisplayInfo(StringBuilder builder)
+    {
+        AppendDecorationLine(builder, "Helmet", decorationHelmetStack);
+        AppendDecorationLine(builder, "Chestplate", decorationBodyStack);
+        AppendDecorationLine(builder, "Leggings", decorationLegsStack);
+        AppendDecorationLine(builder, "Helmet kit", decorationKitHeadStack);
+        AppendDecorationLine(builder, "Ornaments", ornamentsStack);
+        AppendDecorationLine(builder, "Chest kit", decorationKitBodyStack);
+        AppendDecorationLine(builder, "Brackets", bracketsStack);
+        AppendDecorationLine(builder, "Legs kit", decorationKitLegsStack);
+        AppendDecorationLine(builder, "Fasteners", fastenersStack);
+        AppendDecorationLine(builder, "Helmet staged decoration", pendingHeadDecorationStack);
+        AppendDecorationLine(builder, "Helmet staged color", pendingHeadColorStack);
+        AppendDecorationLine(builder, "Chest staged decoration", pendingBodyDecorationStack);
+        AppendDecorationLine(builder, "Chest staged color", pendingBodyColorStack);
+        AppendDecorationLine(builder, "Legs staged decoration", pendingLegsDecorationStack);
+        AppendDecorationLine(builder, "Legs staged color", pendingLegsColorStack);
+
+        if (builder.Length > 0)
+        {
+            builder.AppendLine();
+        }
+
+        builder.Append("Cloth: ");
+        builder.Append(decorationClothStacks.Count);
+        builder.Append("/");
+        builder.Append(DecorationClothCapacity);
+
+        if (Api?.Side == EnumAppSide.Client)
+        {
+            builder.AppendLine();
+            builder.Append("[armorstand: ");
+            builder.Append(armorStandRenderDebug);
+            builder.Append("]");
+        }
+    }
+
+    private static void AppendDecorationLine(StringBuilder builder, string label, ItemStack? stack)
+    {
+        if (stack == null)
+        {
+            return;
+        }
+
+        if (builder.Length > 0)
+        {
+            builder.AppendLine();
+        }
+
+        builder.Append(label);
+        builder.Append(": ");
+        builder.Append(stack.GetName());
+    }
+
+    private ItemStack? GetDecorationShelfStack(string actionName)
+    {
+        return actionName switch
+        {
+            "CupboardSlot1" => decorationKitHeadStack,
+            "CupboardSlot2" => ornamentsStack,
+            "CupboardSlot3" => decorationKitBodyStack,
+            "CupboardSlot4" => bracketsStack,
+            "CupboardSlot5" => decorationKitLegsStack,
+            "CupboardSlot6" => fastenersStack,
+            _ => null
+        };
+    }
+
+    private void SetDecorationShelfStack(string actionName, ItemStack? stack)
+    {
+        switch (actionName)
+        {
+            case "CupboardSlot1":
+                decorationKitHeadStack = stack;
+                return;
+            case "CupboardSlot2":
+                ornamentsStack = stack;
+                return;
+            case "CupboardSlot3":
+                decorationKitBodyStack = stack;
+                return;
+            case "CupboardSlot4":
+                bracketsStack = stack;
+                return;
+            case "CupboardSlot5":
+                decorationKitLegsStack = stack;
+                return;
+            case "CupboardSlot6":
+                fastenersStack = stack;
+                return;
+        }
+    }
+
+    private ItemStack? GetDecorationArmorStack(string actionName)
+    {
+        return actionName switch
+        {
+            "HelmetDeco" => decorationHelmetStack,
+            "BodyDeco" => decorationBodyStack,
+            "LegsDeco" => decorationLegsStack,
+            _ => null
+        };
+    }
+
+    private void SetDecorationArmorStack(string actionName, ItemStack? stack)
+    {
+        switch (actionName)
+        {
+            case "HelmetDeco":
+                decorationHelmetStack = stack;
+                return;
+            case "BodyDeco":
+                decorationBodyStack = stack;
+                return;
+            case "LegsDeco":
+                decorationLegsStack = stack;
+                return;
+        }
+    }
+
+    private static string GetDecorationSlotName(string actionName)
+    {
+        return actionName switch
+        {
+            "CupboardSlot1" => "cupboard slot 1",
+            "CupboardSlot2" => "cupboard slot 2",
+            "CupboardSlot3" => "cupboard slot 3",
+            "CupboardSlot4" => "cupboard slot 4",
+            "CupboardSlot5" => "cupboard slot 5",
+            "CupboardSlot6" => "cupboard slot 6",
+            _ => "cupboard"
+        };
+    }
+
+    private static bool IsDecorationCloth(ItemStack stack)
+    {
+        string path = stack.Collectible?.Code?.Path ?? "";
+        return path.Contains("cloth", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("linen", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsDecorationSmallItem(ItemStack stack)
+    {
+        AssetLocation? code = stack.Collectible?.Code;
+        if (code == null || code.Domain != "facore")
+        {
+            return false;
+        }
+
+        string baseCode = code.Path.Split('-')[0];
+        return baseCode is "rimsandrivets" or "brackets" or "fasteners" or "ornaments" or "decorationkit";
+    }
+
+    private static bool TryGetRimsAndRivetsMetal(ItemStack? stack, out string metal)
+    {
+        metal = "";
+        AssetLocation? code = stack?.Collectible?.Code;
+        if (code?.Domain != "facore" || !code.Path.StartsWith("rimsandrivets-", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        metal = code.Path["rimsandrivets-".Length..];
+        return metal.Length > 0;
+    }
+
+    private static bool IsIronOrBetterTongs(ItemStack? stack)
+    {
+        string path = stack?.Collectible?.Code?.Path ?? "";
+        if (!path.Contains("tongs", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string metal = "";
+        int separator = path.LastIndexOf('-');
+        if (separator >= 0 && separator < path.Length - 1)
+        {
+            metal = path[(separator + 1)..];
+        }
+
+        return metal is "iron" or "meteoriciron" or "steel" or "blistersteel";
+    }
+
+    private static bool IsIronOrBetterTool(ItemStack? stack, string toolName)
+    {
+        string path = stack?.Collectible?.Code?.Path ?? "";
+        if (!path.Contains(toolName, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string metal = "";
+        int separator = path.LastIndexOf('-');
+        if (separator >= 0 && separator < path.Length - 1)
+        {
+            metal = path[(separator + 1)..];
+        }
+
+        return metal is "iron" or "meteoriciron" or "steel" or "blistersteel";
+    }
+
+    private static bool IsSolderingIron(ItemStack? stack)
+    {
+        string path = stack?.Collectible?.Code?.Path ?? "";
+        return path.Contains("solder", StringComparison.OrdinalIgnoreCase)
+            && path.Contains("iron", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTrimValueSet(string? trim)
+    {
+        return !string.IsNullOrEmpty(trim) && !string.Equals(trim, "none", StringComparison.Ordinal);
+    }
+
+    private ItemStack? CreateRimsAndRivetsStack(string metal)
+    {
+        Item? item = Api?.World.GetItem(new AssetLocation("facore", "rimsandrivets-" + metal));
+        return item == null ? null : new ItemStack(item);
+    }
+
+    private bool HasUsableTrimSolderCrucible(out string failure)
+    {
+        if (trimCrucibleStack == null)
+        {
+            failure = $"Place a hot crucible with at least {TrimSolderWeldAmount} lead or silver solder on the crucible stand before baking rivets.";
+            return false;
+        }
+
+        return IsLeadOrSilverSolderCrucible(trimCrucibleStack, requireHeat: true, out _, out failure);
+    }
+
+    private bool TryConsumeTrimSolder(out string failure)
+    {
+        if (!HasUsableTrimSolderCrucible(out failure))
+        {
+            return false;
+        }
+
+        if (!TryGetSolderContent(trimCrucibleStack, out SolderContent solderContent))
+        {
+            failure = "The solder crucible content could not be read.";
+            return false;
+        }
+
+        if (solderContent.Amount < TrimSolderWeldAmount)
+        {
+            failure = $"The solder crucible needs at least {TrimSolderWeldAmount} lead or silver solder to weld rivets.";
+            return false;
+        }
+
+        if (trimCrucibleStack?.Collectible is ILiquidSource liquidSource && solderContent.Stack != null)
+        {
+            ItemStack? takenStack = liquidSource.TryTakeContent(trimCrucibleStack, TrimSolderWeldAmount);
+            if (takenStack != null && takenStack.StackSize >= TrimSolderWeldAmount && TryGetSolderMetal(takenStack, out _))
+            {
+                return true;
+            }
+
+            failure = "The solder could not be removed from the crucible.";
+            return false;
+        }
+
+        if (solderContent.Tree != null && !string.IsNullOrEmpty(solderContent.AmountKey))
+        {
+            int remaining = solderContent.Amount - TrimSolderWeldAmount;
+            if (remaining > 0)
+            {
+                solderContent.Tree.SetInt(solderContent.AmountKey, remaining);
+            }
+            else
+            {
+                solderContent.Tree.RemoveAttribute(solderContent.AmountKey);
+                if (!string.IsNullOrEmpty(solderContent.ContentKey))
+                {
+                    solderContent.Tree.RemoveAttribute(solderContent.ContentKey);
+                }
+            }
+
+            return true;
+        }
+
+        if (solderContent.Stack == null || string.IsNullOrEmpty(solderContent.ContentKey))
+        {
+            failure = "The solder crucible content cannot be consumed from this container.";
+            return false;
+        }
+
+        solderContent.Stack.StackSize -= TrimSolderWeldAmount;
+        SetOrRemoveItemstack(trimCrucibleStack!.Attributes, solderContent.ContentKey, solderContent.Stack.StackSize > 0 ? solderContent.Stack : null);
+        return true;
+    }
+
+    private bool IsLeadOrSilverSolderCrucible(ItemStack? stack, bool requireHeat, out string solderMetal, out string failure)
+    {
+        solderMetal = "";
+        failure = "";
+
+        if (!IsCrucible(stack))
+        {
+            failure = "Place a crucible here.";
+            TrimDebugLog($"SolderCrucible check failed: not crucible stack={FormatStackDebug(stack)}");
+            return false;
+        }
+
+        if (!TryGetSolderContent(stack, out SolderContent solderContent))
+        {
+            failure = "The crucible must contain lead or silver solder.";
+            TrimDebugLog($"SolderCrucible check failed: no solder content stack={FormatStackDebug(stack)} attrs={FormatTreeDebug(stack?.Attributes)} requireHeat={requireHeat}");
+            return false;
+        }
+
+        solderMetal = solderContent.Metal;
+        TrimDebugLog($"SolderCrucible content metal={solderContent.Metal} amount={solderContent.Amount} temp={solderContent.Temperature:0.#} stack={FormatStackDebug(solderContent.Stack)} contentKey={solderContent.ContentKey} amountKey={solderContent.AmountKey} requireHeat={requireHeat}");
+        if (requireHeat && solderContent.Amount < TrimSolderWeldAmount)
+        {
+            failure = $"The solder crucible needs at least {TrimSolderWeldAmount} lead or silver solder to weld rivets.";
+            return false;
+        }
+
+        if (requireHeat)
+        {
+            float temperature = solderContent.Temperature;
+            float requiredTemperature = solderMetal == "silver" ? TrimSolderSilverMinTemperature : TrimSolderLeadMinTemperature;
+            if (temperature < requiredTemperature)
+            {
+                failure = $"The {solderMetal} solder is too cold. Heat it to at least {requiredTemperature:0}C.";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsCrucible(ItemStack? stack)
+    {
+        string path = stack?.Collectible?.Code?.Path ?? "";
+        return path.Contains("crucible", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryGetSolderMetal(ItemStack? stack, out string metal)
+    {
+        metal = "";
+        if (TryGetSolderMetalFromStackCode(stack, out metal))
+        {
+            return true;
+        }
+
+        if (stack?.Collectible is ILiquidInterface liquidInterface
+            && TryGetSolderMetalFromStackCode(liquidInterface.GetContent(stack), out metal))
+        {
+            return true;
+        }
+
+        ITreeAttribute? attrs = stack?.Attributes;
+        if (attrs == null)
+        {
+            return false;
+        }
+
+        foreach (string key in new[] { "contents", "content", "liquid", "metalContent", "output" })
+        {
+            if (TryGetSolderMetalFromStackCode(attrs.GetItemstack(key), out metal))
+            {
+                return true;
+            }
+
+            ITreeAttribute? contentTree = attrs.GetTreeAttribute(key);
+            if (contentTree != null && TryGetSolderMetalFromContentTree(contentTree, out metal))
+            {
+                return true;
+            }
+        }
+
+        foreach (string key in new[] { "metal", "solderMetal", "contentMetal" })
+        {
+            string value = attrs.GetString(key) ?? "";
+            if (TryNormalizeSolderMetal(value, out metal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryGetSolderContentStack(ItemStack? stack, out ItemStack? contentStack, out string contentKey)
+    {
+        contentStack = null;
+        contentKey = "";
+
+        if (stack?.Collectible is ILiquidInterface liquidInterface)
+        {
+            ItemStack? liquidContent = liquidInterface.GetContent(stack);
+            if (TryGetSolderMetal(liquidContent, out _))
+            {
+                contentStack = liquidContent;
+                contentKey = "";
+                return true;
+            }
+        }
+
+        ITreeAttribute? attrs = stack?.Attributes;
+        if (attrs == null)
+        {
+            return false;
+        }
+
+        foreach (string key in new[] { "contents", "content", "liquid", "metalContent" })
+        {
+            ItemStack? attrStack = attrs.GetItemstack(key);
+            if (TryGetSolderMetal(attrStack, out _))
+            {
+                contentStack = attrStack;
+                contentKey = key;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryGetSolderContent(ItemStack? stack, out SolderContent solderContent, bool logDebug = true)
+    {
+        solderContent = default;
+        float containerTemperature = stack?.Collectible?.GetTemperature(Api.World, stack) ?? 0f;
+        if (logDebug)
+        {
+            TrimDebugLog($"TryGetSolderContent stack={FormatStackDebug(stack)} containerTemp={containerTemperature:0.#} attrs={FormatTreeDebug(stack?.Attributes)}");
+        }
+
+        if (TryGetSolderContentStack(stack, out ItemStack? contentStack, out string contentKey)
+            && contentStack != null
+            && TryGetSolderMetal(contentStack, out string stackMetal))
+        {
+            float contentTemperature = contentStack.Collectible.GetTemperature(Api.World, contentStack);
+            if (logDebug)
+            {
+                TrimDebugLog($"TryGetSolderContent matched content stack key={contentKey} content={FormatStackDebug(contentStack)} metal={stackMetal} contentTemp={contentTemperature:0.#}");
+            }
+            solderContent = new SolderContent(
+                stackMetal,
+                contentStack.StackSize,
+                Math.Max(contentTemperature, containerTemperature),
+                contentStack,
+                contentKey,
+                null,
+                ""
+            );
+            return true;
+        }
+
+        ITreeAttribute? attrs = stack?.Attributes;
+        if (attrs == null)
+        {
+            if (logDebug)
+            {
+                TrimDebugLog("TryGetSolderContent no attrs and no content stack.");
+            }
+            return false;
+        }
+
+        foreach (string key in new[] { "contents", "content", "liquid", "metalContent" })
+        {
+            ITreeAttribute? contentTree = attrs.GetTreeAttribute(key);
+            if (contentTree != null && TryGetSolderContentFromTree(contentTree, containerTemperature, out solderContent))
+            {
+                if (logDebug)
+                {
+                    TrimDebugLog($"TryGetSolderContent matched tree key={key} metal={solderContent.Metal} amount={solderContent.Amount} temp={solderContent.Temperature:0.#} tree={FormatTreeDebug(contentTree)}");
+                }
+                return true;
+            }
+        }
+
+        bool matchedRoot = TryGetSolderContentFromTree(attrs, containerTemperature, out solderContent);
+        if (logDebug)
+        {
+            TrimDebugLog($"TryGetSolderContent root match={matchedRoot} metal={solderContent.Metal} amount={solderContent.Amount} temp={solderContent.Temperature:0.#}");
+        }
+        return matchedRoot;
+    }
+
+    private static bool TryGetSolderContentFromTree(ITreeAttribute tree, float fallbackTemperature, out SolderContent solderContent)
+    {
+        solderContent = default;
+        if (!TryGetSolderMetalFromContentTree(tree, out string metal, out string contentKey))
+        {
+            return false;
+        }
+
+        if (!TryGetTreeInt(tree, out string amountKey, out int amount, "units", "quantity", "stackSize", "stacksize", "amount", "size"))
+        {
+            amount = 0;
+        }
+
+        float temperature = fallbackTemperature;
+        if (TryGetTreeFloat(tree, out _, out float contentTemperature, "temperature", "temp"))
+        {
+            temperature = Math.Max(temperature, contentTemperature);
+        }
+
+        solderContent = new SolderContent(metal, amount, temperature, null, contentKey, tree, amountKey);
+        return true;
+    }
+
+    private static bool TryGetTreeInt(ITreeAttribute tree, out string foundKey, out int value, params string[] keys)
+    {
+        foreach (string key in keys)
+        {
+            value = tree.GetInt(key, int.MinValue);
+            if (value != int.MinValue)
+            {
+                foundKey = key;
+                return true;
+            }
+        }
+
+        foundKey = "";
+        value = 0;
+        return false;
+    }
+
+    private static bool TryGetTreeFloat(ITreeAttribute tree, out string foundKey, out float value, params string[] keys)
+    {
+        foreach (string key in keys)
+        {
+            value = tree.GetFloat(key, float.MinValue);
+            if (value > float.MinValue)
+            {
+                foundKey = key;
+                return true;
+            }
+        }
+
+        foundKey = "";
+        value = 0f;
+        return false;
+    }
+
+    private static bool TryGetSolderMetalFromContentTree(ITreeAttribute tree, out string metal)
+    {
+        return TryGetSolderMetalFromContentTree(tree, out metal, out _);
+    }
+
+    private static bool TryGetSolderMetalFromContentTree(ITreeAttribute tree, out string metal, out string contentKey)
+    {
+        foreach (string key in new[] { "stack", "itemstack", "itemStack", "content", "output" })
+        {
+            if (TryGetSolderMetalFromStackCode(tree.GetItemstack(key), out metal))
+            {
+                contentKey = key;
+                return true;
+            }
+        }
+
+        foreach (string key in new[] { "code", "path", "metal", "variant", "solderMetal" })
+        {
+            string value = tree.GetString(key) ?? "";
+            if (TryNormalizeSolderMetal(value, out metal))
+            {
+                contentKey = key;
+                return true;
+            }
+        }
+
+        metal = "";
+        contentKey = "";
+        return false;
+    }
+
+    private static bool TryGetSolderMetalFromStackCode(ItemStack? stack, out string metal)
+    {
+        string path = stack?.Collectible?.Code?.Path ?? "";
+        return TryNormalizeSolderMetal(path, out metal);
+    }
+
+    private static bool TryNormalizeSolderMetal(string value, out string metal)
+    {
+        metal = "";
+        if (value.Contains("lead", StringComparison.OrdinalIgnoreCase))
+        {
+            metal = "lead";
+            return true;
+        }
+
+        if (value.Contains("silver", StringComparison.OrdinalIgnoreCase))
+        {
+            metal = "silver";
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsSneaking(IPlayer player)
+    {
+        return player.Entity?.Controls?.Sneak == true;
+    }
+
+    private static bool TryParseDecorationMaterial(ItemStack stack, string expectedPiece, out string editKind, out string value, out string failure)
+    {
+        editKind = "";
+        value = "";
+        failure = "";
+
+        AssetLocation? code = stack.Collectible?.Code;
+        if (code?.Domain != "facore")
+        {
+            failure = "Use Forgotten Armory decoration materials here.";
+            return false;
+        }
+
+        string path = code.Path;
+        if (path.StartsWith("decorationkit-", StringComparison.Ordinal))
+        {
+            editKind = "color";
+            value = path["decorationkit-".Length..];
+            return value.Length > 0;
+        }
+
+        string requiredPrefix = expectedPiece switch
+        {
+            "head" => "ornaments-",
+            "body" => "brackets-",
+            "legs" => "fasteners-",
+            _ => ""
+        };
+
+        if (requiredPrefix.Length == 0)
+        {
+            return false;
+        }
+
+        if (!path.StartsWith(requiredPrefix, StringComparison.Ordinal))
+        {
+            failure = expectedPiece switch
+            {
+                "head" => "Use ornaments on helmets.",
+                "body" => "Use brackets on chestplates.",
+                "legs" => "Use fasteners on leggings.",
+                _ => "That decoration does not fit this armor piece."
+            };
+            return false;
+        }
+
+        editKind = "decoration";
+        value = path[requiredPrefix.Length..];
+        return value.Length > 0;
+    }
+
+    private static string GetDecorationEditName(string editKind)
+    {
+        return editKind == "color" ? "color kit" : "decoration";
+    }
+
+    private bool HasPendingDecorationEdits(string piece)
+    {
+        return GetPendingDecorationMaterial(piece, "decoration") != null
+            || GetPendingDecorationMaterial(piece, "color") != null;
+    }
+
+    private ItemStack? GetPendingDecorationMaterial(string piece, string editKind)
+    {
+        return (piece, editKind) switch
+        {
+            ("head", "decoration") => pendingHeadDecorationStack,
+            ("head", "color") => pendingHeadColorStack,
+            ("body", "decoration") => pendingBodyDecorationStack,
+            ("body", "color") => pendingBodyColorStack,
+            ("legs", "decoration") => pendingLegsDecorationStack,
+            ("legs", "color") => pendingLegsColorStack,
+            _ => null
+        };
+    }
+
+    private void SetPendingDecorationMaterial(string piece, string editKind, ItemStack? stack)
+    {
+        switch (piece, editKind)
+        {
+            case ("head", "decoration"):
+                pendingHeadDecorationStack = stack;
+                return;
+            case ("head", "color"):
+                pendingHeadColorStack = stack;
+                return;
+            case ("body", "decoration"):
+                pendingBodyDecorationStack = stack;
+                return;
+            case ("body", "color"):
+                pendingBodyColorStack = stack;
+                return;
+            case ("legs", "decoration"):
+                pendingLegsDecorationStack = stack;
+                return;
+            case ("legs", "color"):
+                pendingLegsColorStack = stack;
+                return;
+        }
+    }
+
+    private string GetPendingOriginalValue(string piece, string editKind)
+    {
+        return (piece, editKind) switch
+        {
+            ("head", "decoration") => pendingHeadOriginalDecoration,
+            ("head", "color") => pendingHeadOriginalColor,
+            ("body", "decoration") => pendingBodyOriginalDecoration,
+            ("body", "color") => pendingBodyOriginalColor,
+            ("legs", "decoration") => pendingLegsOriginalDecoration,
+            ("legs", "color") => pendingLegsOriginalColor,
+            _ => ""
+        };
+    }
+
+    private void SetPendingOriginalValue(string piece, string editKind, string value)
+    {
+        switch (piece, editKind)
+        {
+            case ("head", "decoration"):
+                pendingHeadOriginalDecoration = value;
+                return;
+            case ("head", "color"):
+                pendingHeadOriginalColor = value;
+                return;
+            case ("body", "decoration"):
+                pendingBodyOriginalDecoration = value;
+                return;
+            case ("body", "color"):
+                pendingBodyOriginalColor = value;
+                return;
+            case ("legs", "decoration"):
+                pendingLegsOriginalDecoration = value;
+                return;
+            case ("legs", "color"):
+                pendingLegsOriginalColor = value;
+                return;
+        }
+    }
+
+    private void RestorePendingDecorationValue(ItemStack armorStack, string piece, string editKind)
+    {
+        ITreeAttribute? types = armorStack.Attributes?.GetTreeAttribute("types");
+        if (types == null)
+        {
+            return;
+        }
+
+        string originalValue = GetPendingOriginalValue(piece, editKind);
+        types.SetString(editKind + piece, string.IsNullOrEmpty(originalValue) ? "none" : originalValue);
+    }
+
+    private void RestoreAllPendingDecorationPreviews()
+    {
+        RestoreAllPendingDecorationPreviews(decorationHelmetStack, "head");
+        RestoreAllPendingDecorationPreviews(decorationBodyStack, "body");
+        RestoreAllPendingDecorationPreviews(decorationLegsStack, "legs");
+    }
+
+    private void RestoreAllPendingDecorationPreviews(ItemStack? armorStack, string piece)
+    {
+        if (armorStack == null)
+        {
+            return;
+        }
+
+        if (GetPendingDecorationMaterial(piece, "color") != null)
+        {
+            RestorePendingDecorationValue(armorStack, piece, "color");
+        }
+
+        if (GetPendingDecorationMaterial(piece, "decoration") != null)
+        {
+            RestorePendingDecorationValue(armorStack, piece, "decoration");
+        }
+    }
+
+    private void GiveOrDrop(IPlayer byPlayer, ItemStack stack, double yOffset)
+    {
+        if (!byPlayer.InventoryManager.TryGiveItemstack(stack, true))
+        {
+            Api.World.SpawnItemEntity(stack, Pos.ToVec3d().Add(0.5, yOffset, 0.5));
+        }
+    }
+
     private static void SetOrRemoveItemstack(ITreeAttribute tree, string key, ItemStack? stack)
     {
         if (stack == null)
@@ -2585,6 +5550,17 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         }
 
         tree.SetItemstack(key, stack);
+    }
+
+    private static void SetOrRemoveString(ITreeAttribute tree, string key, string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            tree.RemoveAttribute(key);
+            return;
+        }
+
+        tree.SetString(key, value);
     }
 
     private static ItemStack? ResolveItemstack(ItemStack? stack, IWorldAccessor world)
@@ -2668,6 +5644,43 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
     {
         AssetLocation sound = ItemSplashSounds[Api.World.Rand.Next(ItemSplashSounds.Length)];
         PlayStationSound(sound, byPlayer, 0.8f);
+    }
+
+    private void PlayItemInsertSound(IPlayer byPlayer)
+    {
+        PlayStationSound(ItemInsertSound, byPlayer, 0.65f);
+    }
+
+    private void PlayItemPickupSound(IPlayer byPlayer)
+    {
+        PlayStationSound(ItemPickupSound, byPlayer, 0.55f);
+    }
+
+    private void PlayCeramicPlaceSound(IPlayer byPlayer)
+    {
+        PlayStationSound(CeramicPlaceSound, byPlayer, 0.8f);
+    }
+
+    private void PlayScrapeSound(IPlayer byPlayer)
+    {
+        PlayStationSound(ScrapeSound, byPlayer, 0.65f);
+    }
+
+    private void PlayMetalHitSound(IPlayer byPlayer)
+    {
+        AssetLocation sound = MetalHitSounds[Api.World.Rand.Next(MetalHitSounds.Length)];
+        PlayStationSound(sound, byPlayer, 0.85f);
+    }
+
+    private void PlaySawSound(IPlayer byPlayer)
+    {
+        AssetLocation sound = SawSounds[Api.World.Rand.Next(SawSounds.Length)];
+        PlayStationSound(sound, byPlayer, 0.7f);
+    }
+
+    private void PlaySolderSound(IPlayer byPlayer)
+    {
+        PlayStationSound(SolderSound, byPlayer, 0.8f);
     }
 
     private void PlayStationSound(AssetLocation sound, IPlayer byPlayer, float volume = 1f)
@@ -2953,9 +5966,50 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         }
     }
 
+    private void TrimDebugLog(string message)
+    {
+        Api?.Logger.Notification("[FACore TrimStation] {0}: {1}", Pos, message);
+    }
+
     private static string FormatStackDebug(ItemStack? stack)
     {
         return stack == null ? "null" : $"{stack.StackSize}x {stack.Collectible?.Code}";
+    }
+
+    private static string FormatTreeDebug(ITreeAttribute? tree)
+    {
+        if (tree == null)
+        {
+            return "null";
+        }
+
+        var parts = new List<string>();
+        foreach ((string key, IAttribute value) in tree)
+        {
+            parts.Add(key + "=" + FormatAttributeDebug(value));
+        }
+
+        return parts.Count == 0 ? "{}" : "{" + string.Join(", ", parts) + "}";
+    }
+
+    private static string FormatAttributeDebug(IAttribute? attribute)
+    {
+        if (attribute == null)
+        {
+            return "null";
+        }
+
+        if (attribute is ITreeAttribute tree)
+        {
+            return FormatTreeDebug(tree);
+        }
+
+        if (attribute is ItemstackAttribute itemstackAttribute)
+        {
+            return FormatStackDebug(itemstackAttribute.value);
+        }
+
+        return attribute.GetType().Name + ":" + attribute;
     }
 
     private sealed class FAArmorInfo
@@ -2977,6 +6031,59 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         public string Style { get; }
         public string BaseMetal { get; }
         public string TextureKind => SlotPrefix.StartsWith("plate", StringComparison.Ordinal) ? "plate" : SlotPrefix;
+    }
+
+    private readonly struct SolderContent
+    {
+        public SolderContent(string metal, int amount, float temperature, ItemStack? stack, string contentKey, ITreeAttribute? tree, string amountKey)
+        {
+            Metal = metal;
+            Amount = amount;
+            Temperature = temperature;
+            Stack = stack;
+            ContentKey = contentKey;
+            Tree = tree;
+            AmountKey = amountKey;
+        }
+
+        public string Metal { get; }
+        public int Amount { get; }
+        public float Temperature { get; }
+        public ItemStack? Stack { get; }
+        public string ContentKey { get; }
+        public ITreeAttribute? Tree { get; }
+        public string AmountKey { get; }
+    }
+
+    private readonly struct MeshBounds
+    {
+        public MeshBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ)
+        {
+            MinX = minX;
+            MinY = minY;
+            MinZ = minZ;
+            MaxX = maxX;
+            MaxY = maxY;
+            MaxZ = maxZ;
+            IsValid = true;
+        }
+
+        public float MinX { get; }
+        public float MinY { get; }
+        public float MinZ { get; }
+        public float MaxX { get; }
+        public float MaxY { get; }
+        public float MaxZ { get; }
+        public bool IsValid { get; }
+        public float CenterX => (MinX + MaxX) * 0.5f;
+        public float CenterY => (MinY + MaxY) * 0.5f;
+        public float CenterZ => (MinZ + MaxZ) * 0.5f;
+        public float Height => MaxY - MinY;
+
+        public override string ToString()
+        {
+            return $"[{MinX:0.###},{MinY:0.###},{MinZ:0.###}]..[{MaxX:0.###},{MaxY:0.###},{MaxZ:0.###}]";
+        }
     }
 
     private sealed class MappedTextureSource : ITexPositionSource
@@ -3042,6 +6149,23 @@ private static void ApplyLiquidMeshStyle(MeshData mesh)
         }
 
         public Size2i? AtlasSize => fallback.AtlasSize;
+    }
+
+    private sealed class TransparentTextureSource : ITexPositionSource
+    {
+        private readonly TextureAtlasPosition position;
+
+        public TransparentTextureSource(ICoreClientAPI capi, Size2i? atlasSize)
+        {
+            var texture = new CompositeTexture(TransparentTextureLocation);
+            texture.Bake(capi.Assets);
+            capi.BlockTextureAtlas.GetOrInsertTexture(texture, out _, out position, 0.005f);
+            AtlasSize = atlasSize;
+        }
+
+        public TextureAtlasPosition this[string textureCode] => position;
+
+        public Size2i? AtlasSize { get; }
     }
 
     private sealed class CompositeBlockAtlasTextureSource : ITexPositionSource
