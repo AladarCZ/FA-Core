@@ -1,6 +1,6 @@
 {
 	"editor": {
-		"collapsedPaths": "Root/origin,Root/origin2,Root/root/ASUpperTorso,Root/Base/ArmorBase/Stand,Root/root,Root/origin5,Root/Base/ArmorBase/Stand5,Root/origin3,Root/Base/ArmorBase/Stand2,Root/Table2/Drawer4,Root/origin4,Root/Base,Root/ArmorBase,Root/Table1,Root/root/ASStandBaseNS",
+		"collapsedPaths": "Root/origin,Root/origin2,Root/root/ASUpperTorso,Root/Base/ArmorBase/Stand,Root/root,Root/origin5,Root/Base/ArmorBase/Stand5,Root/origin3,Root/Base/ArmorBase/Stand2,Root/Table2/Drawer4,Root/origin4,Root/ArmorBase,Root/Table1,Root/root/ASStandBaseNS",
 		"allAngles": false,
 		"entityTextureMode": true
 	},
@@ -18,7 +18,6 @@
 			"uv": [ 19.0, 24.0 ],
 			"rotationOrigin": [ 27.6, 31.9, 9.0 ],
 			"rotationX": -180.0,
-			"rotationY": 0.0,
 			"rotationZ": -180.0,
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 19.0, 29.0, 24.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
@@ -36,7 +35,6 @@
 			"uv": [ 19.0, 24.0 ],
 			"rotationOrigin": [ 29.6, 18.9, 9.5 ],
 			"rotationX": -180.0,
-			"rotationY": 0.0,
 			"rotationZ": -180.0,
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 19.0, 29.0, 24.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
@@ -54,7 +52,6 @@
 			"uv": [ 19.0, 24.0 ],
 			"rotationOrigin": [ 28.6, 3.9, 8.5 ],
 			"rotationX": -180.0,
-			"rotationY": 0.0,
 			"rotationZ": -180.0,
 			"faces": {
 				"north": { "texture": "#station", "uv": [ 19.0, 29.0, 24.0, 34.0 ], "windMode": [-1,-1,-1,-1], "windData": [1,2,2,1], "enabled": false },
@@ -169,17 +166,17 @@
 		},
 		{
 			"name": "MordantLinenStackElement",
-			"from": [ 12.8, 7.2, 8.0 ],
-			"to": [ 24.4, 12.7, 16.0 ],
+			"from": [ 14.0, 7.0, 15.0 ],
+			"to": [ 26.1, 13.0, 31.0 ],
 			"uv": [ 0.0, 0.0 ],
-			"rotationOrigin": [ 12.8, 7.2, 8.0 ],
+			"rotationOrigin": [ 14.0, 7.0, 15.0 ],
 			"rotationX": -180.0,
 			"rotationZ": -180.0,
 			"faces": {
-				"north": { "texture": "#station", "uv": [ 0.0, 7.0, 11.5, 12.5 ], "enabled": false },
-				"east": { "texture": "#station", "uv": [ 11.5, 7.0, 18.5, 12.5 ], "windMode": [-1,-1,-1,-1], "enabled": false },
-				"south": { "texture": "#station", "uv": [ 7.0, 7.0, 18.5, 12.5 ], "windMode": [-1,-1,-1,-1], "enabled": false },
-				"west": { "texture": "#station", "uv": [ 11.5, 7.0, 18.5, 12.5 ], "windMode": [-1,-1,-1,-1], "enabled": false },
+				"north": { "texture": "#station", "uv": [ 0.0, 0.0, 12.0, 6.0 ] },
+				"east": { "texture": "#station", "uv": [ 11.5, 7.0, 18.5, 12.5 ], "autoUv": false, "windMode": [-1,-1,-1,-1] },
+				"south": { "texture": "#station", "uv": [ 12.0, 0.0, 24.0, 6.0 ], "windMode": [-1,-1,-1,-1] },
+				"west": { "texture": "#station", "uv": [ 11.5, 7.0, 18.5, 12.5 ], "autoUv": false, "windMode": [-1,-1,-1,-1] },
 				"up": { "texture": "#station", "uv": [ 0.0, 0.0, 11.5, 7.0 ], "windMode": [-1,-1,-1,-1], "enabled": false },
 				"down": { "texture": "#station", "uv": [ 11.5, 0.0, 23.0, 7.0 ], "windMode": [-1,-1,-1,-1], "enabled": false }
 			}
