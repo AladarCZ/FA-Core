@@ -4,7 +4,7 @@
         "op": "addmerge",
         "path": "/selling/list",
         "value":[
-            {"code": "game:metalplate-uranium",
+            {"code": "facore:rimsandrivets-uranium",
                 "type": "item",
                 "stacksize": 3,
                 "stock": {

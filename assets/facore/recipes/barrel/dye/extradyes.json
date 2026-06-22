@@ -1,0 +1,38 @@
+[
+	{
+		"code": "dye-dark-burgundy",
+		"sealHours": 0,
+		"ingredients": [
+			{ "type": "item", "code": "game:dye-pink", "litres": 10 },
+			{ "type": "item", "code": "game:charcoal", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:dye-dark-burgundy", "litres": 10 }
+	},
+	{
+		"code": "dye-dark-pine",
+		"sealHours": 0,
+		"ingredients": [
+			{ "type": "item", "code": "game:dye-green", "litres": 10 },
+			{ "type": "item", "code": "game:charcoal", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:dye-dark-pine", "litres": 10 }
+	},
+	{
+		"code": "dye-dark-navy",
+		"sealHours": 0,
+		"ingredients": [
+			{ "type": "item", "code": "game:dye-blue", "litres": 10 },
+			{ "type": "item", "code": "game:charcoal", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:dye-dark-navy", "litres": 10 }
+	},
+	{
+		"code": "dye-light-rose",
+		"sealHours": 0,
+		"ingredients": [
+			{ "type": "item", "code": "game:dye-red", "litres": 10 },
+			{ "type": "item", "code": "game:bonemeal", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:dye-light-rose", "litres": 10 }
+	}
+]
