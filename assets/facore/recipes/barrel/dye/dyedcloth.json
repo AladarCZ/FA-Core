@@ -1,0 +1,38 @@
+[
+	{
+		"code": "dyedcloth-burgundy",
+		"sealHours": 8,
+		"ingredients": [
+			{ "type": "item", "code": "facore:dye-dark-burgundy", "litres": 2, "consumelitres": 2 },
+			{ "type": "item", "code": "game:cloth-mordant", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:cloth-burgundy", "stackSize": 1 }
+	},
+	{
+		"code": "dyedcloth-pine",
+		"sealHours": 8,
+		"ingredients": [
+			{ "type": "item", "code": "facore:dye-dark-pine", "litres": 2, "consumelitres": 2 },
+			{ "type": "item", "code": "game:cloth-mordant", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:cloth-pine", "stackSize": 1 }
+	},
+	{
+		"code": "dyedcloth-navy",
+		"sealHours": 8,
+		"ingredients": [
+			{ "type": "item", "code": "facore:dye-dark-navy", "litres": 2, "consumelitres": 2 },
+			{ "type": "item", "code": "game:cloth-mordant", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:cloth-navy", "stackSize": 1 }
+	},
+	{
+		"code": "dyedcloth-rose",
+		"sealHours": 8,
+		"ingredients": [
+			{ "type": "item", "code": "facore:dye-light-rose", "litres": 2, "consumelitres": 2 },
+			{ "type": "item", "code": "game:cloth-mordant", "quantity": 1 }
+		],
+		"output": { "type": "item", "code": "facore:cloth-rose", "stackSize": 1 }
+	}
+]

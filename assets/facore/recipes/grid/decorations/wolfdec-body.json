@@ -1,0 +1,50 @@
+[
+	{
+		"ingredientPattern": "___,A_C,BBB",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:charcoal", "quantity": 3 },
+			"B": { "type": "item", "code": "game:hide-pelt-*", "tags": ["size-large"] },
+			"C": { "type": "item", "code": "game:knife-*", "isTool": true }
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Wolf body decoration (black)",
+		"output": { "type": "item", "code": "facore:wolfdec-body-black" }
+	},
+
+	{
+		"ingredientPattern": "___,A_C,BBB",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": {
+				"type": "block",
+				"code": "game:woodbucket",
+				"recipeAttributes": {
+					"requiresContent": { "type": "item", "code": "game:strongtanninportion" },
+					"requiresLitres": 10
+				}
+			},
+			"B": { "type": "item", "code": "game:hide-pelt-*", "tags": ["size-large"] },
+			"C": { "type": "item", "code": "game:knife-*", "isTool": true }
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Wolf body decoration (brown)",
+		"output": { "type": "item", "code": "facore:wolfdec-body-brown" }
+	},
+
+	{
+		"ingredientPattern": "___,A_C,BBB",
+		"recipeGroup": 2,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:stone-chalk", "quantity": 3 },
+			"B": { "type": "item", "code": "game:hide-pelt-*", "tags": ["size-large"] },
+			"C": { "type": "item", "code": "game:knife-*", "isTool": true }
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Wolf body decoration (white)",
+		"output": { "type": "item", "code": "facore:wolfdec-body-white" }
+	}
+]

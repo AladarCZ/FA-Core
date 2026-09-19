@@ -1,0 +1,99 @@
+{
+	"code": "coating-full",
+	"class": "ItemLiquidPortion",
+	"matterState": "liquid",
+	"variantgroups": [
+		{
+			"code": "type",
+			"states"	: [
+				"bismuth",
+				"bismuthbronze",
+				"blackbronze",
+				"brass",
+				"copper",
+				"cupronickel",
+				"electrum",
+				"gold",
+				"lead",
+				"meteoriciron",
+				"silver",
+				"tinbronze",
+				"uranium",
+				"zinc"
+			]
+		}
+	],
+	"attributes": {
+		"handbook": {
+			"ignoreCreativeInvStacks": true,
+			"groupBy": ["coating-full-*"]
+		},
+		"waterTightContainerProps": {
+			"containable": true,
+			"isopaque": true,
+			"itemsPerLitre": 100,
+			"textureByType": {
+				"coating-full-bismuth": { "base": "game:block/liquid/dye/purple", "alpha": 255 },
+				"coating-full-bismuthbronze": { "base": "game:block/liquid/dye/brown", "alpha": 255 },
+				"coating-full-blackbronze": { "base": "game:block/liquid/dye/black", "alpha": 255 },
+				"coating-full-brass": { "base": "game:block/liquid/dye/yellow", "alpha": 255 },
+				"coating-full-copper": { "base": "game:block/liquid/dye/orange", "alpha": 255 },
+				"coating-full-cupronickel": { "base": "game:block/liquid/dye/gray", "alpha": 255 },
+				"coating-full-electrum": { "base": "game:block/liquid/dye/yellow", "alpha": 255 },
+				"coating-full-gold": { "base": "game:block/liquid/dye/yellow", "alpha": 255 },
+				"coating-full-lead": { "base": "game:block/liquid/dye/gray", "alpha": 255 },
+				"coating-full-meteoriciron": { "base": "game:block/liquid/dye/gray", "alpha": 255 },
+				"coating-full-silver": { "base": "game:block/liquid/dye/white", "alpha": 255 },
+				"coating-full-tinbronze": { "base": "game:block/liquid/dye/brown", "alpha": 255 },
+				"coating-full-uranium": { "base": "game:block/liquid/dye/green", "alpha": 255 },
+				"coating-full-zinc": { "base": "game:block/liquid/dye/white", "alpha": 255 },
+				"*": { "base": "game:block/liquid/dye/gray", "alpha": 255 }
+			},
+			"isOpaqueByType": {
+				"*": true
+			},
+			"allowSpill": true,
+			"whenSpilled": {
+				"action": "DropContents",
+				"stack": { "type": "item", "code": "facore:coating-full-{type}" }
+			}
+		}
+	},
+	"shape": { "base": "game:item/liquid" },
+	"textureByType": {
+		"coating-full-bismuth": { "base": "game:block/liquid/dye/purple", "alpha": 255 },
+		"coating-full-bismuthbronze": { "base": "game:block/liquid/dye/brown", "alpha": 255 },
+		"coating-full-blackbronze": { "base": "game:block/liquid/dye/black", "alpha": 255 },
+		"coating-full-brass": { "base": "game:block/liquid/dye/yellow", "alpha": 255 },
+		"coating-full-copper": { "base": "game:block/liquid/dye/orange", "alpha": 255 },
+		"coating-full-cupronickel": { "base": "game:block/liquid/dye/gray", "alpha": 255 },
+		"coating-full-electrum": { "base": "game:block/liquid/dye/yellow", "alpha": 255 },
+		"coating-full-gold": { "base": "game:block/liquid/dye/yellow", "alpha": 255 },
+		"coating-full-lead": { "base": "game:block/liquid/dye/gray", "alpha": 255 },
+		"coating-full-meteoriciron": { "base": "game:block/liquid/dye/gray", "alpha": 255 },
+		"coating-full-silver": { "base": "game:block/liquid/dye/white", "alpha": 255 },
+		"coating-full-tinbronze": { "base": "game:block/liquid/dye/brown", "alpha": 255 },
+		"coating-full-uranium": { "base": "game:block/liquid/dye/green", "alpha": 255 },
+		"coating-full-zinc": { "base": "game:block/liquid/dye/white", "alpha": 255 },
+		"*": { "base": "game:block/liquid/dye/gray", "alpha": 255 }
+	},
+	"creativeinventoryStacks": [
+	{
+		"tabs": ["general", "liquids", "forgottenarmorycore"],
+		"stacks": [
+		]
+	}
+	],
+	"maxstacksize": 5000,
+	"materialDensity": 200,
+	"guiTransform": {
+		"translation": { "x": 0, "y": 1, "z": 0 },
+		"rotation": { "x": 123, "y": -33, "z": -13 },
+		"origin": { "x": 0.5, "y": 0, "z": 0.5 },
+		"scale": 1.4
+	},
+	"tpHandTransform": {
+		"translation": { "x": -1.5, "y": -1, "z": -1.4 }
+	}
+}
+

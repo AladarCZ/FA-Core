@@ -1,0 +1,30 @@
+
+{
+	"ingredient": { "type": "item", "code": "game:ingot-*", "name": "metal", "allowedVariants": [	
+                                        "bismuth",
+										"blackbronze",
+										"brass",
+										"copper",
+        								"cupronickel",
+										"electrum",
+        								"gold",
+    									"lead",
+										"meteoriciron",
+										"silver",
+										"uranium",
+										"zinc"										
+							] },
+	"pattern": [[
+		"_#_#_#_#",
+		"#_#_#_#_",
+		"##_##_##",
+		"________",
+		"##_##_##",
+		"________",
+		"########",
+		"________"
+	]],
+	"name": "Rims and Rivets",
+	"code": "rimsandrivets-{metal}",
+	"output": { "type": "item", "code": "facore:rimsandrivets-{metal}" }
+}

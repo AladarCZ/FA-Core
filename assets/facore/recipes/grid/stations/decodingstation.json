@@ -1,0 +1,15 @@
+[
+	{
+		"ingredientPattern": "ABA,CBC,BBB",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:metalnailsandstrips-*", "quantity": 4 },
+			"B": { "type": "item", "code": "game:plank-*", "quantity": 2 },
+			"C": { "type": "item", "code": "game:resin", "quantity": 2 }
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Decodingstation",
+		"output": { "type": "block", "code": "facore:fa-workstation-decoding-west" }
+	}
+]

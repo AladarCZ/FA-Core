@@ -1,0 +1,16 @@
+[
+	{
+		"ingredientPattern": "BAB,FFF,FHF",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:rod-tinbronze" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:rod-iron", "quantity": 2  },
+			"F": { "type": "item", "code": "game:plank-*", "quantity": 8 },	
+			"H": { "type": "item", "code": "game:resin", "quantity": 8 },	
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Trimstation",
+		"output": { "type": "block", "code": "facore:fa-workstation-trim-west" }
+	}
+]

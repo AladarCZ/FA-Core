@@ -1,8 +1,8 @@
 {
-  "type": "content",
+  "type": "code",
   "modid": "facore",
   "name": "FA-Core",
   "authors": ["AladarCZ"],
   "description": "Core library for all the Forgotten Armory mods from 1.22 forward",
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

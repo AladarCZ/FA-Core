@@ -1,0 +1,20 @@
+[
+	{
+		"ingredientPattern": "ABC,D_E,FHI",
+		"recipeGroup": 1,
+		"ingredients": {
+			"A": { "type": "item", "code": "game:cloth-plain" , "quantity": 2 },
+			"B": { "type": "item", "code": "game:metalnailsandstrips-*" },
+			"C": { "type": "block", "code": "game:jug-*"},		
+			"D": { "type": "block", "code":	"game:bowl-*-fired" },	
+			"E": { "type": "item", "code": "game:rope" },	
+			"F": { "type": "item", "code": "game:plank-*" },	
+			"H": { "type": "item", "code": "game:stick" },	
+			"I": { "type": "item", "code": "game:feather" }	
+		},
+		"width": 3,
+		"height": 3,
+		"name": "Decorationkit",
+		"output": { "type": "block", "code": "facore:decorationkit" }
+	}
+]
